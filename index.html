@@ -302,7 +302,7 @@
                     <tr>
                       <td>
                         <strong>เบี้ยขยัน (DILIGENCE)</strong>
-                        <div class="text-muted small">มาครบวันทำงานตามปฏิทิน (อัตรา <span id="lblRateDiligence">650</span> บ.)</div>
+                        <div class="text-muted small" id="lblDiligenceSubtitle">มาครบวันทำงานตามปฏิทิน (อัตรา <span id="lblRateDiligence">650</span> บ.)</div>
                       </td>
                       <td class="text-right font-weight-bold" id="calcDiligenceTotal">0.00</td>
                     </tr>
@@ -658,8 +658,8 @@
                     <th class="col-att-othol desktop-only-table-cell text-right" style="width:80px;">OT HOL (3)</th>
                     <!-- Col 9: OT รวม (Mobile Only) -->
                     <th class="col-att-ot-total mobile-only-table-cell text-center" style="width:48px;">OT</th>
-                    <!-- Col 10: มาทำงาน (Desktop Only Checkbox) -->
-                    <th class="col-att-workday desktop-only-table-cell" style="width:80px;">มาทำงาน</th>
+                    <!-- Col 10: มาทำงาน / การลา (Desktop Only Checkbox + Leave Select) -->
+                    <th class="col-att-workday desktop-only-table-cell text-center" style="width:125px;">มาทำงาน / ลา</th>
                     <!-- Col 11: วันที่มา (Desktop Only) -->
                     <th class="col-att-come desktop-only-table-cell" style="width:65px;">วันที่มา</th>
                     <!-- Col 12: วันทำ OT (Desktop Only) -->
@@ -1659,6 +1659,21 @@
             <span style="font-size: 0.72rem; color: var(--text-muted);" id="attEditWorkStatusHint">บันทึกเวลาเข้า-ออกงาน</span>
           </div>
           <input type="checkbox" id="attEditWorkDayCheck" style="width: 22px; height: 22px; accent-color: var(--black); cursor: pointer;" onchange="onAttEditModalWorkDayToggle(this.checked)">
+        </div>
+
+        <!-- ประเภทการลา (แสดงเมื่อไม่ได้มาทำงาน) -->
+        <div id="attEditLeaveGroup" style="display: none; padding: 12px 14px; background: var(--gray-50); border: 1.5px solid var(--border-color); border-radius: 10px; margin-bottom: 14px;">
+          <label for="attEditLeaveTypeSelect" style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">ประเภทการลา (วันที่ไม่มาทำงาน)</label>
+          <select id="attEditLeaveTypeSelect" class="form-control form-select" style="height: 38px; font-weight: 600;" onchange="onAttEditModalLeaveChange(this.value)">
+            <option value="">- ไม่ได้ใช้สิทธิ์ลา (ขาดงาน) -</option>
+            <option value="ANNUAL">ลาพักร้อน (ไม่หักเบี้ยขยัน)</option>
+            <option value="SICK">ลาป่วย (หักเบี้ยขยัน)</option>
+            <option value="PERSONAL">ลากิจ (หักเบี้ยขยัน)</option>
+            <option value="OTHER">ลาอื่นๆ (หักเบี้ยขยัน)</option>
+          </select>
+          <div id="attEditLeaveDiligenceHint" style="font-size: 0.72rem; margin-top: 6px; font-weight: 600; color: var(--text-muted);">
+            * การลาที่ไม่ใช่ "ลาพักร้อน" หรือการขาดงานในวันทำงานปกติ จะทำให้ถูกหักเบี้ยขยัน
+          </div>
         </div>
 
         <!-- ฟิลด์เวลาเข้า & เวลาออก -->

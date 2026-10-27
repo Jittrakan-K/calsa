@@ -820,6 +820,27 @@ function updateRowOT(row) {
 // ==========================================================================
 // 7. การสร้างและจัดการตารางเข้า-ออกงาน (Timesheet Table)
 // ==========================================================================
+const LEAVE_TYPES = {
+  ANNUAL: { label: 'ลาพักร้อน', shortLabel: 'ลาพักร้อน', deductDiligence: false, badgeClass: 'badge-leave-annual' },
+  SICK: { label: 'ลาป่วย', shortLabel: 'ลาป่วย', deductDiligence: true, badgeClass: 'badge-leave-deduct' },
+  PERSONAL: { label: 'ลากิจ', shortLabel: 'ลากิจ', deductDiligence: true, badgeClass: 'badge-leave-deduct' },
+  OTHER: { label: 'ลาอื่นๆ', shortLabel: 'ลาอื่นๆ', deductDiligence: true, badgeClass: 'badge-leave-deduct' }
+};
+
+function isTargetWorkDayInfo(dayInfo) {
+  if (!dayInfo) return false;
+  return (
+    dayInfo.isWorkDay === true ||
+    dayInfo.type === 'NORMAL_WORKDAY' ||
+    dayInfo.type === 'WORKING_SATURDAY' ||
+    dayInfo.type === 'ORBRAY_WORKDAY' ||
+    dayInfo.name === 'วันทำงานปกติ' ||
+    dayInfo.name === 'เสาร์ทำงาน' ||
+    dayInfo.name === 'วันเสาร์ทำงานปกติ' ||
+    dayInfo.name === 'วันทำงานพิเศษ'
+  );
+}
+
 function buildAttendanceTable() {
   const tbody = document.getElementById('attendanceTbody');
   if (!tbody) return;
@@ -879,6 +900,30 @@ function buildAttendanceTable() {
     const otDisplay = totalRowOT > 0 ? totalRowOT.toFixed(1) : '-';
     const outTimeText = row.workDay && row.outTime ? row.outTime : '-';
 
+    const isTargetDay = isTargetWorkDayInfo(dayInfo);
+    const leaveCode = (!row.workDay && row.leaveType && LEAVE_TYPES[row.leaveType]) ? row.leaveType : '';
+    const leaveObj = leaveCode ? LEAVE_TYPES[leaveCode] : null;
+    const showLeaveSelector = !row.workDay && (isTargetDay || !!leaveCode);
+
+    let leaveSelectHtml = '';
+    if (showLeaveSelector) {
+      leaveSelectHtml = `
+        <select class="form-control form-control-sm form-select leave-type-select ${leaveCode ? (leaveCode === 'ANNUAL' ? 'leave-select-annual' : 'leave-select-deduct') : ''}"
+          onchange="onAttendanceLeaveTypeChange(${idx}, this.value)"
+          title="เลือกประเภทการลา">
+          <option value="" ${!leaveCode ? 'selected' : ''}>- เลือกการลา -</option>
+          <option value="ANNUAL" ${leaveCode === 'ANNUAL' ? 'selected' : ''}>ลาพักร้อน</option>
+          <option value="SICK" ${leaveCode === 'SICK' ? 'selected' : ''}>ลาป่วย</option>
+          <option value="PERSONAL" ${leaveCode === 'PERSONAL' ? 'selected' : ''}>ลากิจ</option>
+          <option value="OTHER" ${leaveCode === 'OTHER' ? 'selected' : ''}>ลาอื่นๆ</option>
+        </select>
+      `;
+    }
+
+    const mobileLeaveTagHtml = leaveObj
+      ? `<div class="leave-status-subbadge ${leaveObj.badgeClass}">${leaveObj.shortLabel}</div>`
+      : '';
+
     tr.innerHTML = `
       <!-- Col 0: Mobile Only Edit Icon Button -->
       <td class="col-att-edit mobile-only-table-cell text-center">
@@ -902,6 +947,7 @@ function buildAttendanceTable() {
           <span class="desktop-only-inline">${dayInfo.name}</span>
           <span class="mobile-only-inline">${dayInfo.shortName || dayInfo.name}</span>
         </span>
+        ${mobileLeaveTagHtml}
       </td>
 
       <!-- Col 4: เวลาเข้า (Desktop Only) -->
@@ -947,14 +993,17 @@ function buildAttendanceTable() {
         ${otDisplay}
       </td>
 
-      <!-- Col 10: มาทำงาน (Desktop Only Checkbox) -->
+      <!-- Col 10: มาทำงาน / การลา (Desktop Only Checkbox + Leave Select) -->
       <td class="col-att-workday desktop-only-table-cell text-center">
-        <input type="checkbox" ${row.workDay ? 'checked' : ''} onchange="onAttendanceToggleWorkDay(${idx}, this.checked)" title="ติ๊กเมื่อมาทำงาน">
+        <div class="workday-cell-wrap">
+          <input type="checkbox" ${row.workDay ? 'checked' : ''} onchange="onAttendanceToggleWorkDay(${idx}, this.checked)" title="ติ๊กเมื่อมาทำงาน">
+          ${leaveSelectHtml}
+        </div>
       </td>
 
       <!-- Col 11: วันที่มา (Desktop Only) -->
       <td class="col-att-come desktop-only-table-cell text-center">
-        <span class="${row.come ? 'text-success font-weight-bold' : 'text-muted'}">${row.come ? '1' : '0'}</span>
+        <span class="${row.come ? 'text-success font-weight-bold' : (leaveObj ? 'text-primary font-weight-bold' : 'text-muted')}" title="${leaveObj ? `ใช้สิทธิ์${leaveObj.label}` : ''}">${row.come ? '1' : '0'}</span>
       </td>
 
       <!-- Col 12: วันทำ OT (Desktop Only) -->
@@ -987,6 +1036,7 @@ function onAttendanceToggleWorkDay(index, isChecked) {
   row.come = isChecked ? 1 : 0;
 
   if (isChecked) {
+    row.leaveType = '';
     row.inTime = '08:00';
     if (!row.outTime) {
       row.outTime = '17:00';
@@ -999,8 +1049,30 @@ function onAttendanceToggleWorkDay(index, isChecked) {
     row.hol = 0;
     row.otHol = 0;
     row.otDay = 0;
+    if (typeof row.leaveType === 'undefined') {
+      row.leaveType = '';
+    }
   }
 
+  buildAttendanceTable();
+  recalculateSalary();
+  saveCurrentAttendance();
+}
+
+function onAttendanceLeaveTypeChange(index, leaveTypeVal) {
+  const row = currentAttendance[index];
+  if (!row) return;
+  row.leaveType = leaveTypeVal || '';
+  if (row.leaveType) {
+    row.workDay = 0;
+    row.come = 0;
+    row.inTime = '';
+    row.outTime = '';
+    row.ot = 0;
+    row.hol = 0;
+    row.otHol = 0;
+    row.otDay = 0;
+  }
   buildAttendanceTable();
   recalculateSalary();
   saveCurrentAttendance();
@@ -1013,6 +1085,11 @@ function recalculateAttendanceTotals() {
   let totalTargetDays = 0;
   let totalCameDays = 0;
   let totalOTDays = 0;
+  let totalLeaveDays = 0;
+  let totalAnnualLeaveDays = 0;
+  let totalOtherLeaveDays = 0;
+  let unexcusedAbsentTargetDays = 0;
+  const leaveDeductionReasons = [];
 
   currentAttendance.forEach(row => {
     totalOT15 += parseFloat(row.ot) || 0;
@@ -1021,22 +1098,27 @@ function recalculateAttendanceTotals() {
 
     // วันทำงานเป้าหมาย: นับตามจำนวนวันทำงานปกติ และเสาร์ทำงาน รวมกันแทน
     const dayInfo = getOrbrayDayInfo(row.date);
-    const isTargetDay = (
-      dayInfo.isWorkDay === true ||
-      dayInfo.type === 'NORMAL_WORKDAY' ||
-      dayInfo.type === 'WORKING_SATURDAY' ||
-      dayInfo.type === 'ORBRAY_WORKDAY' ||
-      dayInfo.name === 'วันทำงานปกติ' ||
-      dayInfo.name === 'เสาร์ทำงาน' ||
-      dayInfo.name === 'วันเสาร์ทำงานปกติ' ||
-      dayInfo.name === 'วันทำงานพิเศษ'
-    );
+    const isTargetDay = isTargetWorkDayInfo(dayInfo);
     if (isTargetDay) {
       totalTargetDays += 1;
     }
 
-    totalCameDays += parseInt(row.come, 10) || 0;
+    const came = parseInt(row.come, 10) || 0;
+    totalCameDays += came;
     totalOTDays += parseInt(row.otDay, 10) || 0;
+
+    const leaveCode = (!came && row.leaveType && LEAVE_TYPES[row.leaveType]) ? row.leaveType : '';
+    if (leaveCode) {
+      totalLeaveDays += 1;
+      if (leaveCode === 'ANNUAL') {
+        totalAnnualLeaveDays += 1;
+      } else {
+        totalOtherLeaveDays += 1;
+        leaveDeductionReasons.push(LEAVE_TYPES[leaveCode].label);
+      }
+    } else if (isTargetDay && !came) {
+      unexcusedAbsentTargetDays += 1;
+    }
   });
 
   const elOT15 = document.getElementById('attTotalOT15');
@@ -1061,7 +1143,29 @@ function recalculateAttendanceTotals() {
   if (elMobileTarget) elMobileTarget.innerText = totalTargetDays;
   if (elMobileOT) elMobileOT.innerText = (totalOT15 + totalHol + totalOTHol).toFixed(1);
 
-  return { totalOT15, totalHol, totalOTHol, totalTargetDays, totalCameDays, totalOTDays };
+  const paidDays = totalCameDays + totalLeaveDays;
+  const isDiligenceEligible = (
+    totalTargetDays > 0 &&
+    totalOtherLeaveDays === 0 &&
+    unexcusedAbsentTargetDays === 0 &&
+    (totalCameDays + totalAnnualLeaveDays) >= totalTargetDays
+  );
+
+  return {
+    totalOT15,
+    totalHol,
+    totalOTHol,
+    totalTargetDays,
+    totalCameDays,
+    totalOTDays,
+    totalLeaveDays,
+    totalAnnualLeaveDays,
+    totalOtherLeaveDays,
+    unexcusedAbsentTargetDays,
+    paidDays,
+    isDiligenceEligible,
+    leaveDeductionReasons
+  };
 }
 
 // ==========================================================================
@@ -1149,6 +1253,19 @@ function openAttendanceEditModal(idx) {
     selectEl.disabled = !row.workDay;
   }
 
+  const leaveGroupEl = document.getElementById('attEditLeaveGroup');
+  const leaveSelectEl = document.getElementById('attEditLeaveTypeSelect');
+  const isTargetDay = isTargetWorkDayInfo(dayInfo);
+  const currentLeave = (!row.workDay && row.leaveType && LEAVE_TYPES[row.leaveType]) ? row.leaveType : '';
+
+  if (leaveSelectEl) {
+    leaveSelectEl.value = currentLeave;
+  }
+  if (leaveGroupEl) {
+    leaveGroupEl.style.display = (!row.workDay && (isTargetDay || !!currentLeave)) ? 'block' : 'none';
+  }
+  updateAttEditModalLeaveHint(currentLeave);
+
   updateAttEditModalPreview();
   modal.style.display = 'flex';
 }
@@ -1159,10 +1276,31 @@ function closeAttendanceEditModal() {
   currentAttEditIndex = -1;
 }
 
+function updateAttEditModalLeaveHint(leaveVal) {
+  const hintEl = document.getElementById('attEditLeaveDiligenceHint');
+  if (!hintEl) return;
+  if (leaveVal === 'ANNUAL') {
+    hintEl.innerText = '✔ ใช้สิทธิ์ลาพักร้อน: ได้รับฐานเงินเดือนปกติ และไม่หักเบี้ยขยัน';
+    hintEl.style.color = 'var(--success-color, #16a34a)';
+  } else if (leaveVal && LEAVE_TYPES[leaveVal]) {
+    hintEl.innerText = `⚠ ใช้สิทธิ์${LEAVE_TYPES[leaveVal].label}: ได้รับฐานเงินเดือนปกติ แต่จะถูกหักเบี้ยขยัน`;
+    hintEl.style.color = 'var(--danger-color, #dc2626)';
+  } else {
+    hintEl.innerText = '* หากไม่มาทำงานและไม่ได้เลือก "ลาพักร้อน" จะทำให้ถูกหักเบี้ยขยัน';
+    hintEl.style.color = 'var(--text-muted)';
+  }
+}
+
+function onAttEditModalLeaveChange(leaveVal) {
+  updateAttEditModalLeaveHint(leaveVal);
+}
+
 function onAttEditModalWorkDayToggle(isChecked) {
   const inSelectEl = document.getElementById('attEditInTimeSelect');
   const selectEl = document.getElementById('attEditOutTimeSelect');
   const hintEl = document.getElementById('attEditWorkStatusHint');
+  const leaveGroupEl = document.getElementById('attEditLeaveGroup');
+  const leaveSelectEl = document.getElementById('attEditLeaveTypeSelect');
 
   if (inSelectEl) {
     inSelectEl.disabled = !isChecked;
@@ -1179,6 +1317,17 @@ function onAttEditModalWorkDayToggle(isChecked) {
   }
   if (hintEl) {
     hintEl.innerText = isChecked ? 'มาทำงาน (บันทึกเวลาทำงาน)' : 'ไม่ได้มาทำงานในวันนี้';
+  }
+
+  if (leaveGroupEl) {
+    if (isChecked) {
+      leaveGroupEl.style.display = 'none';
+    } else if (currentAttEditIndex >= 0 && currentAttEditIndex < currentAttendance.length) {
+      const row = currentAttendance[currentAttEditIndex];
+      const dayInfo = getOrbrayDayInfo(row.date);
+      const isTargetDay = isTargetWorkDayInfo(dayInfo);
+      leaveGroupEl.style.display = (isTargetDay || (leaveSelectEl && leaveSelectEl.value)) ? 'block' : 'none';
+    }
   }
 
   updateAttEditModalPreview();
@@ -1217,9 +1366,11 @@ function saveAttendanceEditModal() {
   const isWork = document.getElementById('attEditWorkDayCheck') ? document.getElementById('attEditWorkDayCheck').checked : false;
   const inTime = isWork && document.getElementById('attEditInTimeSelect') ? document.getElementById('attEditInTimeSelect').value : '';
   const outTime = isWork && document.getElementById('attEditOutTimeSelect') ? document.getElementById('attEditOutTimeSelect').value : '';
+  const leaveSelectEl = document.getElementById('attEditLeaveTypeSelect');
 
   row.workDay = isWork ? 1 : 0;
   row.come = isWork ? 1 : 0;
+  row.leaveType = (!isWork && leaveSelectEl) ? (leaveSelectEl.value || '') : '';
   row.inTime = inTime ? inTime.trim() : (isWork ? '08:00' : '');
   row.outTime = outTime ? outTime.trim() : '';
 
@@ -1241,6 +1392,7 @@ function autoFillNormalWorkdays(shouldSave = true) {
     if (dayInfo.isWorkDay) {
       row.workDay = 1;
       row.come = 1;
+      row.leaveType = '';
       row.inTime = '08:00';
       row.outTime = '17:00';
       row.ot = 0;
@@ -1250,6 +1402,7 @@ function autoFillNormalWorkdays(shouldSave = true) {
     } else {
       row.workDay = 0;
       row.come = 0;
+      row.leaveType = '';
       row.inTime = '';
       row.outTime = '';
       row.ot = 0;
@@ -1270,6 +1423,7 @@ function clearAttendanceTable() {
   currentAttendance.forEach(row => {
     row.workDay = 0;
     row.come = 0;
+    row.leaveType = '';
     row.inTime = '';
     row.outTime = '';
     row.ot = 0;
@@ -1304,6 +1458,7 @@ function generateAttendanceForPeriod(startStr, endStr) {
       otHol: 0,
       workDay: dayInfo.isWorkDay ? 1 : 0,
       come: dayInfo.isWorkDay ? 1 : 0,
+      leaveType: '',
       otDay: 0
     });
     cur.setDate(cur.getDate() + 1);
@@ -1339,6 +1494,7 @@ function recalculateSalary() {
 
   const B2_targetDays = totals.totalTargetDays;
   const D2_cameDays = totals.totalCameDays;
+  const paidDays = totals.paidDays;
   const F2_otDays = totals.totalOTDays;
   const G2_ot15Hours = totals.totalOT15;
   const H2_ot1Hours = totals.totalHol;
@@ -1355,14 +1511,14 @@ function recalculateSalary() {
   const ssoDeduction = typeof currentSalaryConfig.ssoDeduction !== 'undefined' ? Number(currentSalaryConfig.ssoDeduction) : 0;
 
   const C2_dailyRate = B2_targetDays > 0 ? (baseSalary / B2_targetDays) : 0;
-  const E2_actualSalary = (B2_targetDays > 0 && D2_cameDays >= B2_targetDays)
+  const E2_actualSalary = (B2_targetDays > 0 && paidDays >= B2_targetDays)
     ? baseSalary
-    : Math.round(C2_dailyRate * D2_cameDays);
+    : Math.round(C2_dailyRate * paidDays);
 
   const J2_foodAllowance = foodPerDay * D2_cameDays;
   const K2_otMealAllowance = otMealPerDay * F2_otDays;
   const L2_travelAllowance = transportationAllowance;
-  const M2_diligenceAllowance = (B2_targetDays > 0 && D2_cameDays >= B2_targetDays) ? diligenceFullAmount : 0;
+  const M2_diligenceAllowance = totals.isDiligenceEligible ? diligenceFullAmount : 0;
 
   // ฐานค่าจ้างต่อชั่วโมงปกติ: (เงินเดือน / 30 / 8)
   const baseHourlyRate = baseSalary > 0 ? (baseSalary / 30 / 8) : 0;
@@ -1427,12 +1583,30 @@ function recalculateSalary() {
 
   const diligenceStatusEl = document.getElementById('calcDiligenceStatus');
   if (diligenceStatusEl) {
-    if (B2_targetDays > 0 && D2_cameDays >= B2_targetDays) {
-      diligenceStatusEl.innerText = 'ครบวันทำงาน';
+    if (totals.isDiligenceEligible) {
+      diligenceStatusEl.innerText = totals.totalAnnualLeaveDays > 0
+        ? `ครบวันทำงาน (ลาพักร้อน ${totals.totalAnnualLeaveDays} วัน)`
+        : 'ครบวันทำงาน';
       diligenceStatusEl.className = 'badge-status-ok';
+    } else if (totals.totalOtherLeaveDays > 0) {
+      const uniqueLeaves = [...new Set(totals.leaveDeductionReasons)].join('/');
+      diligenceStatusEl.innerText = `หักเบี้ยขยัน (${uniqueLeaves} ${totals.totalOtherLeaveDays} วัน)`;
+      diligenceStatusEl.className = 'day-badge badge-sunday';
     } else {
       diligenceStatusEl.innerText = 'ขาด/ไม่ครบวันทำงาน';
       diligenceStatusEl.className = 'day-badge badge-sunday';
+    }
+  }
+  const lblDiligenceSubtitle = document.getElementById('lblDiligenceSubtitle');
+  if (lblDiligenceSubtitle) {
+    const rateTxt = formatCurrency(currentSalaryConfig.diligenceFullAmount);
+    if (totals.isDiligenceEligible) {
+      lblDiligenceSubtitle.innerHTML = `มาครบวันทำงานตามปฏิทิน (อัตรา <span id="lblRateDiligence">${rateTxt}</span> บ.)`;
+    } else if (totals.totalOtherLeaveDays > 0) {
+      const uniqueLeaves = [...new Set(totals.leaveDeductionReasons)].join(', ');
+      lblDiligenceSubtitle.innerHTML = `<span class="text-danger font-weight-bold">หักเบี้ยขยันเนื่องจากใช้สิทธิ์${uniqueLeaves}</span> (อัตรา <span id="lblRateDiligence">${rateTxt}</span> บ.)`;
+    } else {
+      lblDiligenceSubtitle.innerHTML = `มาครบวันทำงานตามปฏิทิน (อัตรา <span id="lblRateDiligence">${rateTxt}</span> บ.)`;
     }
   }
   setElText('calcDiligenceTotal', formatCurrency(M2_diligenceAllowance));
@@ -1476,8 +1650,17 @@ function recalculateSalary() {
   if (ringTxt) ringTxt.textContent = `${Math.round(attRatio * 100)}%`;
   setElText('insCameDays', D2_cameDays);
   setElText('insTargetDays', B2_targetDays);
-  const missingDays = Math.max(0, B2_targetDays - D2_cameDays);
-  setElText('insAttStatus', missingDays === 0 && B2_targetDays > 0 ? 'ครบวันทำงาน • ได้เบี้ยขยัน' : `ขาดอีก ${missingDays} วัน`);
+  const missingDays = Math.max(0, B2_targetDays - paidDays);
+  let insStatusText = `ขาดอีก ${missingDays} วัน`;
+  if (totals.isDiligenceEligible) {
+    insStatusText = totals.totalAnnualLeaveDays > 0
+      ? `ลาพักร้อน ${totals.totalAnnualLeaveDays} วัน • ได้เบี้ยขยัน`
+      : 'ครบวันทำงาน • ได้เบี้ยขยัน';
+  } else if (totals.totalOtherLeaveDays > 0) {
+    const uniqueLeaves = [...new Set(totals.leaveDeductionReasons)].join('/');
+    insStatusText = `${uniqueLeaves} ${totals.totalOtherLeaveDays} วัน • หักเบี้ยขยัน`;
+  }
+  setElText('insAttStatus', insStatusText);
 
   setElText('insDailyRate', formatCurrency(C2_dailyRate));
   setElText('insHourlyRate', formatCurrency(baseHourlyRate));

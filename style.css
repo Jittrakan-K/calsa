@@ -2739,6 +2739,60 @@ input[type="number"]::placeholder,
 .badge-bridge { background: var(--gray-50); color: var(--black); border-style: dotted; }
 .badge-workday { background: var(--gray-100); color: var(--text-secondary); border-color: var(--border-subtle); }
 
+/* Leave Selector & Badges in Attendance Table */
+.workday-cell-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.leave-type-select {
+  height: 26px !important;
+  padding: 2px 6px !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  border-radius: 4px !important;
+  max-width: 112px;
+  cursor: pointer;
+}
+
+.leave-type-select.leave-select-annual {
+  background-color: #f0fdf4 !important;
+  color: #166534 !important;
+  border-color: #86efac !important;
+}
+
+.leave-type-select.leave-select-deduct {
+  background-color: #fef2f2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+}
+
+.leave-status-subbadge {
+  display: inline-block;
+  margin-top: 3px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.badge-leave-annual {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.badge-leave-deduct {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
 .cal-instruction-box {
   font-size: 0.74rem;
   color: var(--text-muted);
