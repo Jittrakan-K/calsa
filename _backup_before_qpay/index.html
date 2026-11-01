@@ -1,0 +1,2155 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CACULATION SALARY — BY JITTRAKAN K.</title>
+  
+  <!-- Website Favicon matching brand logo -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+  <link rel="shortcut icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="favicon.png">
+  <script>
+    (function() {
+      if (window.location.protocol === 'file:') {
+        const link = document.createElement('link');
+        link.type = 'image/svg+xml';
+        link.rel = 'icon';
+        link.href = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxNCIgZmlsbD0iIzAwMDAwMCIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDgsIDgpIHNjYWxlKDIpIj4KICAgIDxwYXRoIGQ9Ik0xMyAyTDMgMTRoOGwtMiA4IDEwLTEyaC04bDItOHoiIGZpbGw9IiNmZmZmZmYiLz4KICA8L2c+Cjwvc3ZnPg==';
+        document.head.appendChild(link);
+      }
+    })();
+    if (window.self !== window.top || window.location.search.includes('mode=mobile_sim')) {
+      document.documentElement.classList.add('is-in-simulator');
+    }
+  </script>
+  
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Prompt:wght@400;500;600;700;800&family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Firebase SDK Compat via CDN -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js"></script>
+</head>
+<body class="theme-monochrome">
+  <!-- Minimalist Top Navigation Bar (Strictly Single Row, Black & White) -->
+  <header class="app-nav no-print">
+    <div class="nav-container">
+      <!-- Left: Clean Brand Cluster -->
+      <div class="app-branding" onclick="switchView('main')">
+        <div class="brand-logo-mark">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M13 2L3 14h8l-2 8 10-12h-8l2-8z"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-name">CACULATION SALARY</div>
+          <div class="brand-tag">PAYROLL SYSTEM <span class="brand-by-sep">•</span> <span class="brand-author">BY JITTRAKAN K.</span></div>
+        </div>
+      </div>
+
+      <!-- Center: Segmented Navigation Tabs -->
+      <nav class="nav-menu">
+        <button type="button" class="nav-link-btn active" id="navBtnMain" onclick="switchView('main')">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+          <span>คำนวณเงินเดือน</span>
+        </button>
+        <button type="button" class="nav-link-btn" id="navBtnAttendance" onclick="switchView('attendance')">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span>ลงเวลาทำงาน (IN-OUT)</span>
+        </button>
+        <button type="button" class="nav-link-btn" id="navBtnCalendar" onclick="toggleCalendarView()">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>ปฏิทินวันทำงาน</span>
+        </button>
+      </nav>
+
+      <!-- Right: User Menu & Auth Actions -->
+      <div class="nav-actions">
+        <div id="navAuthArea" class="nav-auth-area">
+          <button type="button" class="btn-simulator-trigger" id="btnPhoneSimulator" onclick="openPhoneSimulator()" title="จำลองหน้าจอแอปบนมือถือ (PHONE SIMULATOR)">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="5" y="2" width="14" height="20" rx="3" ry="3"/>
+              <line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+          </button>
+          <button type="button" class="btn-factorium-outline" onclick="openAuthModal()">
+            เข้าสู่ระบบ (LOGIN)
+          </button>
+          <button type="button" class="btn-factorium-gradient" onclick="openAuthModal()">
+            เริ่มใช้งาน (START)
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Unified Executive Control Bar (Replaces bulky ribbon + period card with 1 slim toolbar) -->
+  <section class="unified-executive-bar no-print">
+    <div class="container exec-bar-container">
+      <!-- Left: Company Selector & Management -->
+      <div class="exec-brand-cluster">
+        <div class="exec-pill-company" title="เลือกบริษัทที่จะแสดงข้อมูล">
+          <span class="btn-comp-spacer" aria-hidden="true"></span>
+          <span class="exec-icon">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="9" y1="22" x2="9" y2="22.01"/><line x1="15" y1="22" x2="15" y2="22.01"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="15" y1="6" x2="15" y2="6.01"/><line x1="9" y1="10" x2="9" y2="10.01"/><line x1="15" y1="10" x2="15" y2="10.01"/><line x1="9" y1="14" x2="9" y2="14.01"/><line x1="15" y1="14" x2="15" y2="14.01"/><line x1="9" y1="18" x2="9" y2="18.01"/><line x1="15" y1="18" x2="15" y2="18.01"/></svg>
+          </span>
+          <select id="ribbonCompanySelect" class="exec-select-company" onchange="onRibbonCompanyChange(this.value)" title="เลือกบริษัทที่จะแสดงข้อมูล"></select>
+        </div>
+        <div class="exec-btn-group">
+          <button type="button" class="btn-exec-icon" onclick="openAddCompanyModal()" title="เพิ่มบริษัทใหม่และกำหนดข้อมูลวันที่">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span class="btn-exec-tooltip">เพิ่มบริษัท</span>
+          </button>
+          <button type="button" class="btn-exec-icon" onclick="openManageCompaniesModal()" title="จัดการรายชื่อบริษัทและข้อมูลวันที่">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span class="btn-exec-tooltip">จัดการบริษัท</span>
+          </button>
+          <button type="button" class="btn-exec-icon" onclick="openCalendarScanModal()" title="สแกนและวิเคราะห์รูปปฏิทินบริษัทด้วย AI">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span class="btn-exec-tooltip">สแกนรูปปฏิทิน AI</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Center: Payroll Period Navigation -->
+      <div class="exec-period-cluster">
+        <button type="button" class="btn-period-arrow" onclick="navPrevPeriod()" title="งวดก่อนหน้า">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="exec-period-picker" title="เลือกรอบการคำนวณเงินเดือน">
+          <span class="exec-period-cal-icon">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </span>
+          <select id="payrollPeriodSelect" class="exec-period-select" onchange="onPayrollPeriodSelectChange()"></select>
+          <span class="exec-period-arrow-down">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+        </div>
+        <button type="button" class="btn-period-arrow" onclick="navNextPeriod()" title="งวดถัดไป">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
+      <!-- Right: Calendar Year & Structure Config -->
+      <div class="exec-tools-cluster">
+        <div class="exec-year-picker" title="เลือกปีปฏิทิน">
+          <span class="btn-year-spacer" aria-hidden="true"></span>
+          <span class="exec-year-icon">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </span>
+          <select id="appYearSelect" class="exec-year-select" onchange="onAppYearChange()"></select>
+          <span class="exec-year-arrow-down">
+            <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </span>
+          <button type="button" class="btn-year-plus" onclick="openAddYearModal()" title="เพิ่มปีปฏิทินใหม่">+</button>
+        </div>
+        <button type="button" class="btn-exec-settings desktop-only-inline" onclick="openSettingsSalaryModal()" title="แก้ไขค่าเงินเดือน เบี้ยเลี้ยง และอัตรา OT เฉพาะงวดนี้">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+          <span>ตั้งค่าเงิน</span>
+        </button>
+      </div>
+
+      <!-- Preserved DOM IDs for JS Calculation Engine -->
+      <span id="heroTargetDays" style="display:none;">22</span>
+      <span id="heroTotalOTHours" style="display:none;">0.0</span>
+      <span id="heroNetPay" style="display:none;">0.00</span>
+    </div>
+  </section>
+
+  <main class="main-content">
+    <!-- MAIN WORKSPACE: TIMESHEET & SALARY CALCULATOR -->
+    <section id="view-main" class="view-panel active-panel no-print">
+      <div class="container">
+        
+        <!-- Admin Context Banner -->
+        <div id="adminScopeBanner" class="admin-scope-banner" style="display:none;"></div>
+
+        <!-- Net Salary Summary Banner (Compact Financial Statement Cards in Single Row) -->
+        <div class="summary-cards-grid compact-cards">
+          <div class="sum-card income-card">
+            <div class="card-content">
+              <div class="card-meta">
+                <span class="card-icon-tag" title="เงินได้รวม">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                </span>
+                <span class="card-title">ยอดรวมเงินได้</span>
+                <span class="card-tag-sub">TOTAL GROSS</span>
+              </div>
+              <div class="card-val-row">
+                <span class="currency-symbol">฿</span>
+                <span class="card-amount" id="dashTotalIncome">0.00</span>
+              </div>
+            </div>
+          </div>
+          <div class="sum-card deduct-card">
+            <div class="card-content">
+              <div class="card-meta">
+                <span class="card-icon-tag" title="เงินหัก">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </span>
+                <span class="card-title">เงินหักประกันสังคม</span>
+                <span class="card-tag-sub">DEDUCTIONS (SSO)</span>
+              </div>
+              <div class="card-val-row">
+                <span class="currency-symbol">-฿</span>
+                <span class="card-amount" id="dashTotalDeduct">875.00</span>
+              </div>
+            </div>
+          </div>
+          <div class="sum-card net-card">
+            <div class="card-content">
+              <div class="card-meta">
+                <span class="card-icon-tag card-icon-net" title="เงินได้สุทธิ">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                </span>
+                <span class="card-title">เงินได้สุทธิรับจริง</span>
+                <span class="card-tag-sub">NET PAYABLE</span>
+              </div>
+              <div class="card-val-row">
+                <span class="currency-symbol">฿</span>
+                <span class="card-amount" id="dashNetPay">0.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Attendance Quick KPI Strip & Direct Jump (Ultra-Compact Single Row) -->
+        <div class="attendance-compact-strip">
+          <div class="att-strip-left">
+            <div class="att-strip-pill" title="จำนวนวันที่มาทำงานจริง เทียบวันเป้าหมายตามปฏิทิน">
+              <span class="pill-icon">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>
+              </span>
+              <span class="pill-label">มาทำงานจริง:</span>
+              <strong class="pill-val" id="quickCameDays">0</strong>
+              <span class="pill-slash">/</span>
+              <span class="pill-target" id="quickTargetDays">0</span>
+              <span class="pill-unit">วัน</span>
+            </div>
+
+            <div class="att-strip-pill" title="ชั่วโมง OT สะสมในงวดนี้">
+              <span class="pill-icon">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </span>
+              <span class="pill-label">ชั่วโมง OT สะสม:</span>
+              <strong class="pill-val" id="quickTotalOTHours">0.0</strong>
+              <span class="pill-unit">ชม.</span>
+            </div>
+
+            <div class="att-strip-pill" title="จำนวนวันที่ทำ OT">
+              <span class="pill-icon">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </span>
+              <span class="pill-label">วันทำ OT:</span>
+              <strong class="pill-val" id="quickTotalOTDays">0</strong>
+              <span class="pill-unit">วัน</span>
+            </div>
+          </div>
+
+          <div class="att-strip-right">
+            <button type="button" class="btn-att-jump" onclick="switchView('attendance')" title="เปิดตารางลงเวลาทำงานและชั่วโมง OT รายวัน">
+              <span class="btn-jump-icon">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </span>
+              <span class="btn-jump-text">ลงเวลาทำงาน (IN-OUT)</span>
+              <span class="btn-jump-arrow">➔</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- สรุปรายการคำนวณเงินเดือนในรอบนี้ (Salary Breakdown Summary) -->
+        <div class="card salary-breakdown-card">
+          <div class="card-header-flex">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <h2 class="card-header-title" style="margin-bottom: 0;">สรุปรายการเงินได้และเงินหักประจำรอบ</h2>
+                <span class="card-paydate-badge" id="cardPeriodBadge" style="letter-spacing: 0.5px;">-</span>
+                <span id="cardPeriodConfigStatusBadge" style="display: none !important;"></span>
+              </div>
+              <p class="subtitle text-muted small" id="cardPeriodSubtitle" style="margin-top: 4px;">คำนวณจากยอดลงเวลาตามสูตรโครงสร้างเงินได้</p>
+            </div>
+            <div class="card-header-actions">
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openSettingsSalaryModal()" title="แก้ไขค่าเงินเดือน เบี้ยเลี้ยง และอัตรา OT เฉพาะงวดนี้">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                <span class="btn-lbl-long">ปรับโครงสร้างค่าเงิน</span>
+                <span class="btn-lbl-short">โครงสร้าง</span>
+              </button>
+              <span id="cardPayDateDisplay" style="display: none !important;"></span>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="salary-calc-grid">
+              <!-- Column 1: รายการเงินได้หลัก (Base Earnings & Allowances) -->
+              <div class="calc-col">
+                <div class="calc-col-header-flex">
+                  <h3 class="calc-col-title">เงินได้ประจำ (EARNINGS)</h3>
+                </div>
+                <table class="calc-mini-table">
+                  <tbody>
+                    <tr>
+                      <td>
+                        <strong>เงินเดือนพื้นฐาน (BASE SALARY)</strong>
+                        <div class="text-muted small">มาทำงาน <span id="calcCameDays">0</span>/<span id="calcTargetDays">0</span> วัน (สถานะ: <span id="calcDiligenceStatus">ครบวันทำงาน</span>)</div>
+                      </td>
+                      <td class="text-right font-weight-bold" id="calcActualSalary">0.00</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>เบี้ยขยัน (DILIGENCE)</strong>
+                        <div class="text-muted small" id="lblDiligenceSubtitle">มาครบวันทำงานตามปฏิทิน (อัตรา <span id="lblRateDiligence">650</span> บ.)</div>
+                      </td>
+                      <td class="text-right font-weight-bold" id="calcDiligenceTotal">0.00</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>เงินช่วยเหลือค่าเดินทาง (TRAVEL)</strong>
+                        <div class="text-muted small">คงที่ประจำเดือน</div>
+                      </td>
+                      <td class="text-right font-weight-bold" id="calcTravelTotal">1,230.00</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong id="lblFoodTitle">ค่าอาหารกลางวัน (FOOD)</strong>
+                        <div class="text-muted small"><span id="lblFoodPerDay">20</span> บาท &times; <span id="calcFoodDays">0</span> วันที่มา</div>
+                      </td>
+                      <td class="text-right font-weight-bold" id="calcFoodTotal">0.00</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Column 2: ค่าล่วงเวลา (Overtime / OT) -->
+              <div class="calc-col">
+                <div class="calc-col-header-flex">
+                  <h3 class="calc-col-title">ค่าล่วงเวลา (OVERTIME)</h3>
+                </div>
+                <table class="calc-mini-table">
+                  <tbody>
+                    <tr>
+                      <td>
+                        <strong id="lblOTMealTitle">อาหารโอที (OT MEAL)</strong>
+                        <div class="text-muted small"><span id="lblOTMealPerDay">15</span> บาท &times; <span id="calcOTMealDays">0</span> วันที่ทำ OT &ge; 1 ชม.</div>
+                      </td>
+                      <td class="text-right font-weight-bold" id="calcOTMealTotal">0.00</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong id="lblOT15Title">ค่าล่วงเวลา OT 1.5 เท่า (วันปกติ)</strong>
+                        <div class="text-muted small">(<span id="lblOT15Base">20,000</span>/<span id="lblOT15Days">30</span>/8) &times; (<span id="lblOT15Mult">1.5</span> &times; <span id="calcOT15Hours">0.0</span> ชม.)</div>
+                      </td>
+                      <td class="text-right font-weight-bold" id="calcOT15Total">0.00</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong id="lblOT1Title">ค่าล่วงเวลา OT 1.0 เท่า (วันหยุด 8 ชม.)</strong>
+                        <div class="text-muted small">(<span id="lblOT1Base">20,000</span>/<span id="lblOT1Days">30</span>/8) &times; (<span id="lblOT1Mult">1.0</span> &times; <span id="calcOT1Hours">0.0</span> ชม.)</div>
+                      </td>
+                      <td class="text-right font-weight-bold" id="calcOT1Total">0.00</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong id="lblOT3Title">ค่าล่วงเวลา OT 3.0 เท่า (วันหยุดหลัง 17:00)</strong>
+                        <div class="text-muted small">(<span id="lblOT3Base">20,000</span>/<span id="lblOT3Days">30</span>/8) &times; (<span id="lblOT3Mult">3.0</span> &times; <span id="calcOT3Hours">0.0</span> ชม.)</div>
+                      </td>
+                      <td class="text-right font-weight-bold" id="calcOT3Total">0.00</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Column 3: รายการเงินหัก & สรุปยอดสุทธิ (Deductions & Net Pay) -->
+              <div class="calc-col calc-col-right">
+                <div class="calc-col-header-flex">
+                  <h3 class="calc-col-title">เงินหัก & สรุปสุทธิ (NET)</h3>
+                </div>
+                <table class="calc-mini-table">
+                  <tbody>
+                    <tr>
+                      <td>
+                        <strong id="lblSSOTitle">ประกันสังคม (SSO 5%)</strong>
+                        <div class="text-muted small">เพดานฐานเงินเดือน <span id="lblSSOMaxBase">17,500</span> บาท</div>
+                      </td>
+                      <td class="text-right font-weight-bold" id="calcSSOTotal">-875.00</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>รวมเงินหัก (TOTAL DEDUCT)</strong>
+                        <div class="text-muted small">ยอดหักรวมทุกรายการ</div>
+                      </td>
+                      <td class="text-right font-weight-bold" id="calcSumDeduct">-875.00</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>รวมเงินได้ทั้งสิ้น (TOTAL GROSS)</strong>
+                        <div class="text-muted small">เงินได้ประจำ + ค่าล่วงเวลา</div>
+                      </td>
+                      <td class="text-right font-weight-bold" id="calcSumIncome">0.00</td>
+                    </tr>
+                    <tr class="calc-net-row">
+                      <td>
+                        <strong>เงินได้สุทธิรับจริง (NET PAYABLE)</strong>
+                        <div class="text-muted small">ยอดโอนสุทธิประจำรอบ</div>
+                      </td>
+                      <td class="text-right font-weight-bold" id="calcNetPayRow">0.00</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+                <!-- Preserved DOM IDs for JS Calculation Engine (Grand Net Box removed per user request) -->
+                <div id="salaryGrandNetBox" style="display:none;">
+                  <span id="calcGrandNetPay">0.00</span>
+                  <span id="netBoxIncomeVal">0.00</span>
+                  <span id="netBoxDeductVal">0.00</span>
+                  <span id="netBoxNetVal">0.00</span>
+                  <span id="netBoxPeriod">-</span>
+                  <span id="netBoxPayDate">-</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card Footer Page Navigation Bar -->
+          <div class="card-page-nav-bar">
+            <button type="button" class="btn-subnav-arrow" onclick="navPrevPeriod()" title="งวดก่อนหน้า">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              <span>งวดก่อนหน้า</span>
+            </button>
+            <div class="nav-bar-center">
+              <button type="button" class="btn-page-jump primary-jump" onclick="switchView('attendance')" title="เปิดหน้าบันทึกเวลาทำงานรายวัน">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span>หน้าถัดไป: ตารางลงเวลาทำงาน (IN-OUT)</span>
+                <span class="jump-arrow">➔</span>
+              </button>
+              <button type="button" class="btn-page-jump secondary-jump" onclick="switchView('calendar')" title="เปิดดูปฏิทินวันทำงาน 12 เดือน">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span>ปฏิทินวันทำงาน</span>
+              </button>
+            </div>
+            <button type="button" class="btn-subnav-arrow" onclick="navNextPeriod()" title="งวดถัดไป">
+              <span>งวดถัดไป</span>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Insight Panel: 2D Visual Summary Tiles (fills space below breakdown) -->
+        <div class="insight-grid">
+          <!-- Tile 1: Income composition stacked bar -->
+          <div class="insight-tile">
+            <div class="insight-head">
+              <span class="insight-icon">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+              </span>
+              <span class="insight-title">สัดส่วนรายได้</span>
+            </div>
+            <div class="mix-bar">
+              <span class="mix-seg seg-regular" id="mixSegRegular" style="width:0%"></span>
+              <span class="mix-seg seg-ot" id="mixSegOT" style="width:0%"></span>
+              <span class="mix-seg seg-deduct" id="mixSegDeduct" style="width:0%"></span>
+            </div>
+            <div class="mix-legend">
+              <span><i class="dot seg-regular"></i>ประจำ <b id="mixPctRegular">0%</b></span>
+              <span><i class="dot seg-ot"></i>OT <b id="mixPctOT">0%</b></span>
+              <span><i class="dot seg-deduct"></i>หัก <b id="mixPctDeduct">0%</b></span>
+            </div>
+          </div>
+
+          <!-- Tile 2: Attendance progress ring -->
+          <div class="insight-tile insight-tile-row">
+            <svg class="att-ring" viewBox="0 0 44 44" width="58" height="58">
+              <circle cx="22" cy="22" r="18" class="ring-bg"/>
+              <circle cx="22" cy="22" r="18" class="ring-fg" id="attRingFg" stroke-dasharray="113.1" stroke-dashoffset="113.1"/>
+              <text x="22" y="25" text-anchor="middle" class="ring-text" id="attRingPct">0%</text>
+            </svg>
+            <div class="insight-body">
+              <div class="insight-head">
+                <span class="insight-icon">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><polyline points="9 15 11 17 15 13"/></svg>
+                </span>
+                <span class="insight-title">การมาทำงาน</span>
+              </div>
+              <div class="insight-big"><span id="insCameDays">0</span><small> / <span id="insTargetDays">0</span> วัน</small></div>
+              <div class="insight-sub" id="insAttStatus">-</div>
+            </div>
+          </div>
+
+          <!-- Tile 3: Rates -->
+          <div class="insight-tile">
+            <div class="insight-head">
+              <span class="insight-icon">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+              </span>
+              <span class="insight-title">อัตราค่าจ้าง</span>
+            </div>
+            <div class="rate-list">
+              <div class="rate-item"><span>ค่าแรง / วัน</span><b id="insDailyRate">0.00</b></div>
+              <div class="rate-item"><span>ค่าแรง / ชม.</span><b id="insHourlyRate">0.00</b></div>
+              <div class="rate-item"><span>OT 1.5 / ชม.</span><b id="insOT15Rate">0.00</b></div>
+            </div>
+          </div>
+
+          <!-- Tile 4: Quick actions -->
+          <div class="insight-tile">
+            <div class="insight-head">
+              <span class="insight-icon">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </span>
+              <span class="insight-title">ทางลัด</span>
+            </div>
+            <div class="quick-actions">
+              <button type="button" class="qa-btn" onclick="prepareAndPrint()" title="พิมพ์สลิปเงินเดือน">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                <span>พิมพ์สลิป</span>
+              </button>
+              <button type="button" class="qa-btn" onclick="openSettingsSalaryModal()" title="ตั้งค่าเงินเดือน">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                <span>ตั้งค่าเงิน</span>
+              </button>
+              <button type="button" class="qa-btn" onclick="openCalendarScanModal()" title="สแกนรูปปฏิทินบริษัท">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>สแกนปฏิทิน</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ATTENDANCE / TIMESHEET WORKSPACE (SEPARATE PAGE) -->
+    <section id="view-attendance" class="view-panel no-print" style="display:none;">
+      <div class="container">
+        
+        <!-- Admin Context Banner for Attendance View -->
+        <div id="adminScopeBannerAtt" class="admin-scope-banner" style="display:none;"></div>
+
+        <!-- Period Navigation Toolbar for Attendance -->
+        <div class="period-navigator card" id="attPeriodNavigator">
+          <div class="period-nav-left">
+            <button type="button" class="btn-subnav-arrow" onclick="switchView('main')" title="กลับหน้าสรุปเงินเดือน">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              <span class="desktop-only-inline">กลับหน้าคำนวณ</span>
+              <span class="mobile-only-inline">กลับ</span>
+            </button>
+            <span class="period-nav-label desktop-only-inline">รอบเดือน:</span>
+            <button type="button" class="btn btn-outline-primary btn-nav-arrow" onclick="navPrevPeriod()" title="งวดก่อนหน้า">
+              <span class="desktop-only-inline">◀ ก่อนหน้า</span>
+              <span class="mobile-only-inline">◀</span>
+            </button>
+            <div class="period-select-wrapper">
+              <select id="payrollPeriodSelectAtt" class="form-select form-select-period" onchange="onPayrollPeriodSelectAttChange()"></select>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-nav-arrow" onclick="navNextPeriod()" title="งวดถัดไป">
+              <span class="desktop-only-inline">ถัดไป ▶</span>
+              <span class="mobile-only-inline">▶</span>
+            </button>
+          </div>
+
+          <div class="period-nav-right">
+            <button type="button" class="btn btn-outline-success" onclick="autoFillNormalWorkdays()" title="เติมเวลาทำงานปกติ (08:00–17:00)">
+              <span class="desktop-only-inline">⚡ เติมวันปกติ (08:00–17:00)</span>
+              <span class="mobile-only-inline">⚡ เติมวันปกติ</span>
+            </button>
+            <button type="button" class="btn btn-outline-danger" onclick="clearAttendanceTable()" title="ล้างเวลาทั้งหมดในรอบนี้">
+              🗑️ ล้างเวลา
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="switchView('calendar')" title="ดูปฏิทินวันทำงาน">
+              <span class="desktop-only-inline">📅 ปฏิทินวันทำงาน ➔</span>
+              <span class="mobile-only-inline">📅 ปฏิทิน</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Attendance Quick KPI Metrics Bar -->
+        <div class="attendance-kpi-bar mb-3">
+          <div class="kpi-mini-card">
+            <div class="kpi-info">
+              <span class="kpi-label">วันทำงานเป้าหมาย</span>
+              <strong class="kpi-val" id="attCardTargetDays">0 วัน</strong>
+            </div>
+          </div>
+          <div class="kpi-mini-card">
+            <div class="kpi-info">
+              <span class="kpi-label">มาทำงานจริง</span>
+              <strong class="kpi-val" id="attCardCameDays">0 วัน</strong>
+            </div>
+          </div>
+          <div class="kpi-mini-card">
+            <div class="kpi-info">
+              <span class="kpi-label">ชั่วโมง OT รวม</span>
+              <strong class="kpi-val" id="attCardOTHours">0.0 ชม.</strong>
+            </div>
+          </div>
+          <div class="kpi-mini-card kpi-net-card">
+            <div class="kpi-info">
+              <span class="kpi-label">เงินได้สุทธิประมาณการ</span>
+              <strong class="kpi-val" id="attCardNetPay">0.00 บาท</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timesheet Table (IN-OUT 31 วัน) -->
+        <div class="card">
+          <div class="card-header-flex">
+            <div>
+              <h2 class="card-header-title">บันทึกเวลาเข้า-ออกงาน (IN-OUT)</h2>
+              <p class="subtitle" id="timesheetPeriodSubtitle">รอบการลงเวลาทำงาน</p>
+            </div>
+            <div class="ot-quick-badges">
+              <span class="badge-rule">✔ เวลาเข้า: 08:00 (เมื่อติ๊กมาทำงาน)</span>
+              <span class="badge-rule">🕒 เวลาออก: เลือกจากรายการ</span>
+              <span class="badge-rule">⚡ OT: คำนวณอัตโนมัติ</span>
+            </div>
+          </div>
+
+          <div class="card-body">
+            <details class="ot-hint-banner" id="otHintDetails">
+              <summary class="ot-hint-summary">
+                <span class="ot-hint-title">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 4px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                  <strong>เกณฑ์เวลาออก &amp; อัตราคิด OT</strong>
+                </span>
+                <span class="ot-hint-toggle">ดูกฎเวลา ▾</span>
+              </summary>
+              <div class="ot-hint-content">
+                <div class="ot-rule-line">
+                  <span class="ot-pill-tag">วันปกติ</span>
+                  <span>17:00=0 ชม. | 17:30/17:50=0.5 ชม. | 18:20=1.0 ชม. | 18:50=1.5 ชม. | 19:20=2.0 ชม. | 19:50=2.5 ชม. ... ถึง 07:50=14.5 ชม. (+0.5 ชม. ทุก 30 นาที)</span>
+                </div>
+                <div class="ot-rule-line" style="margin-top: 4px;">
+                  <span class="ot-pill-tag">วันหยุด</span>
+                  <span>เวลาออก 08:30–17:00 คิด <strong>Holiday OT 1.0</strong> • หลัง 17:00 คิด <strong>OT Holiday 3.0</strong></span>
+                </div>
+              </div>
+            </details>
+
+            <div class="table-responsive">
+              <table class="table-timesheet" id="tableAttendance">
+                <thead>
+                  <tr>
+                    <!-- Col 0: Mobile Only Edit Icon -->
+                    <th class="col-att-edit mobile-only-table-cell text-center" title="แก้ไขการลงเวลา">
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                      </svg>
+                    </th>
+                    <!-- Col 1: วันที่ -->
+                    <th class="col-att-date text-center" style="width:58px;">วันที่</th>
+                    <!-- Col 2: วัน -->
+                    <th class="col-att-day text-center" style="width:40px;">วัน</th>
+                    <!-- Col 3: สถานะ -->
+                    <th class="col-att-status text-center" style="width:130px;">สถานะ</th>
+                    <!-- Col 4: เวลาเข้า (Desktop Only) -->
+                    <th class="col-att-in desktop-only-table-cell text-center" style="width:90px;">เวลาเข้า</th>
+                    <!-- Col 5: เวลาออก -->
+                    <th class="col-att-out text-center" style="width:95px;">เวลาออก</th>
+                    <!-- Col 6: OT 1.5 (Desktop Only) -->
+                    <th class="col-att-ot15 desktop-only-table-cell text-right" style="width:80px;">OT (1.5)</th>
+                    <!-- Col 7: Holiday 1.0 (Desktop Only) -->
+                    <th class="col-att-hol desktop-only-table-cell text-right" style="width:80px;">HOLIDAY (1)</th>
+                    <!-- Col 8: OT Hol 3.0 (Desktop Only) -->
+                    <th class="col-att-othol desktop-only-table-cell text-right" style="width:80px;">OT HOL (3)</th>
+                    <!-- Col 9: OT รวม (Mobile Only) -->
+                    <th class="col-att-ot-total mobile-only-table-cell text-center" style="width:48px;">OT</th>
+                    <!-- Col 10: มาทำงาน / การลา (Desktop Only Checkbox + Leave Select) -->
+                    <th class="col-att-workday desktop-only-table-cell text-center" style="width:125px;">มาทำงาน / ลา</th>
+                    <!-- Col 11: วันที่มา (Desktop Only) -->
+                    <th class="col-att-come desktop-only-table-cell" style="width:65px;">วันที่มา</th>
+                    <!-- Col 12: วันทำ OT (Desktop Only) -->
+                    <th class="col-att-otday desktop-only-table-cell" style="width:70px;">วันทำ OT</th>
+                  </tr>
+                </thead>
+                <tbody id="attendanceTbody"></tbody>
+                <tfoot>
+                  <!-- Desktop Sum Row (11 columns matching Desktop order) -->
+                  <tr class="timesheet-sum-row desktop-only-table-row">
+                    <td colspan="5" class="text-right font-weight-bold">รวมยอด:</td>
+                    <td class="text-right font-weight-bold" id="attTotalOT15">0.0</td>
+                    <td class="text-right font-weight-bold" id="attTotalHol">0.0</td>
+                    <td class="text-right font-weight-bold" id="attTotalOTHol">0.0</td>
+                    <td class="text-center font-weight-bold" id="attTotalTargetDays">0</td>
+                    <td class="text-center font-weight-bold" id="attTotalCameDays">0</td>
+                    <td class="text-center font-weight-bold" id="attTotalOTDays">0</td>
+                  </tr>
+
+                  <!-- Mobile Sum Row (6 columns matching Mobile order) -->
+                  <tr class="timesheet-sum-row mobile-only-table-row">
+                    <td colspan="4" class="text-center font-weight-bold">
+                      มาทำงาน: <span id="attMobileCameDays">0</span>/<span id="attMobileTargetDays">0</span> วัน
+                    </td>
+                    <td class="text-center font-weight-bold" style="font-size: 0.72rem; white-space: nowrap;">รวม OT:</td>
+                    <td class="text-center font-weight-bold" id="attMobileTotalOT">0.0</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <!-- Attendance Page Footer Navigation -->
+            <div class="attendance-footer-bar">
+              <div class="att-footer-left">
+                <button type="button" class="btn btn-outline-secondary" onclick="switchView('main')">
+                  ← หน้าก่อนหน้า: คำนวณเงินเดือน
+                </button>
+              </div>
+              <div class="att-footer-right">
+                <button type="button" class="btn btn-primary" onclick="switchView('calendar')">
+                  หน้าถัดไป: ปฏิทินวันทำงาน ➔
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CALENDAR VIEW (CAN BE TOGGLED ON/OFF) -->
+    <section id="view-calendar" class="view-panel no-print" style="display:none;">
+      <div class="container">
+        <div class="card">
+          <div class="card-header-flex">
+            <div>
+              <h2 class="card-header-title">
+                ปฏิทินวันทำงาน: <span id="calHeaderCompanyBadge" class="badge-cal-company">ORBRAY</span> <span class="text-muted">–</span> <span id="calHeaderYear">2569 / 2026</span>
+              </h2>
+              <p class="subtitle">สามารถคลิกที่วันในปฏิทินเพื่อเปลี่ยนสถานะวันทำงาน/วันหยุดได้โดยตรง</p>
+            </div>
+            <div class="calendar-header-actions">
+              <!-- Mobile Row 1: Quick Navigation & AI Scan Action -->
+              <div class="cal-header-row cal-header-nav-row">
+                <button type="button" class="btn btn-outline-secondary btn-sm cal-btn-back" onclick="switchView('main')" title="กลับหน้าคำนวณเงินเดือน">
+                  <span class="desktop-only-inline">← กลับหน้าคำนวณเงินเดือน</span>
+                  <span class="mobile-only-inline">← กลับหน้าคำนวณ</span>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm btn-scan-cal-cta" onclick="openCalendarScanModal()" title="สแกนและวิเคราะห์รูปปฏิทินบริษัทด้วย AI">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 3px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  <span>สแกนรูปปฏิทิน AI</span>
+                </button>
+              </div>
+
+              <!-- Desktop-only attendance shortcut (redundant on mobile bottom nav) -->
+              <button type="button" class="btn btn-outline-secondary btn-sm desktop-only-inline" onclick="switchView('attendance')">
+                ⏱️ ไปหน้าลงเวลาทำงาน
+              </button>
+
+              <!-- Mobile Row 2: Company Picker & Calendar Setup -->
+              <div class="cal-header-row cal-header-tools-row">
+                <div class="cal-company-picker">
+                  <select id="calHeaderCompanySelect" class="form-select form-select-sm cal-header-select" onchange="onRibbonCompanyChange(this.value)" title="เลือกบริษัทเพื่อดู/แก้ไขปฏิทิน"></select>
+                </div>
+                <button type="button" class="btn btn-outline-primary btn-sm cal-btn-add-comp" onclick="openAddCompanyModal()" title="เพิ่มบริษัทใหม่พร้อมข้อมูลวันที่">
+                  <span class="desktop-only-inline">+ เพิ่มบริษัท</span>
+                  <span class="mobile-only-inline">+ บริษัท</span>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm cal-btn-add-year" onclick="openAddYearModal()" title="เพิ่มปีปฏิทินใหม่">
+                  <span class="desktop-only-inline">เพิ่มปีปฏิทินใหม่</span>
+                  <span class="mobile-only-inline">+ เพิ่มปี</span>
+                </button>
+                <button type="button" class="btn btn-outline-danger btn-sm" id="btnDeleteCurrentYear" onclick="deleteCurrentYear()" style="display:none;">
+                  ลบปีนี้
+                </button>
+              </div>
+
+              <!-- Desktop-only close button (redundant with back button on mobile) -->
+              <button type="button" class="btn btn-secondary btn-sm desktop-only-inline" onclick="switchView('main')">
+                ปิดปฏิทิน
+              </button>
+            </div>
+          </div>
+          <div class="card-body">
+            <!-- Calendar Legend -->
+            <div class="calendar-legend-box">
+              <div class="legend-item"><span class="legend-badge badge-national">xx</span><span><strong>NATIONAL HOLIDAY</strong> (วันหยุดนักขัตฤกษ์)</span></div>
+              <div class="legend-item"><span class="legend-badge badge-memorial">xx</span><span><strong>MEMORIAL DAY WITH PAY</strong> (วันหยุดประเพณีจ่ายเงิน)</span></div>
+              <div class="legend-item"><span class="legend-badge badge-orbray">xx</span><span><strong>SPECIAL WORKDAY</strong> (วันทำงานพิเศษ)</span></div>
+              <div class="legend-item"><span class="legend-badge badge-sat-holiday">xx</span><span><strong>SATURDAY HOLIDAY</strong> (วันเสาร์หยุด)</span></div>
+              <div class="legend-item"><span class="legend-badge badge-sunday">xx</span><span><strong>SUNDAY HOLIDAY</strong> (วันอาทิตย์หยุด)</span></div>
+              <div class="legend-item"><span class="legend-badge badge-work-sat">xx</span><span><strong>WORKING SATURDAY</strong> (วันเสาร์ทำงานปกติ)</span></div>
+              <div class="legend-item"><span class="legend-badge badge-bridge">xx</span><span><strong>BRIDGE HOLIDAY</strong> (วันหยุดพิเศษ)</span></div>
+              <div class="legend-item"><span class="legend-badge badge-workday">xx</span><span><strong>NORMAL WORKDAY</strong> (วันทำงานปกติ)</span></div>
+            </div>
+
+            <div class="cal-instruction-box">
+              <em>คลิกที่วันที่ใดก็ได้ในตารางเพื่อเปลี่ยนสถานะ (เช่น เปลี่ยนเสาร์หยุดเป็นเสาร์ทำงาน หรือระบุวันหยุดนักขัตฤกษ์)</em>
+            </div>
+
+            <!-- 12-Month Calendar Grid -->
+            <div class="orbray-cal-grid" id="orbrayCalendarGrid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL: ADD NEW YEAR -->
+  <div class="modal-backdrop" id="addYearModal" style="display:none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>เพิ่มปีปฏิทินใหม่</h3>
+        <button type="button" class="modal-close" onclick="closeAddYearModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="inpNewYearBE">ระบุปี พ.ศ. ที่ต้องการเพิ่ม (เช่น 2570):</label>
+          <input type="number" id="inpNewYearBE" class="form-control" placeholder="2570" min="2500" max="2700" value="2570">
+          <small class="text-muted">ปี ค.ศ. จะคำนวณให้อัตโนมัติ (เช่น 2570 = 2027)</small>
+        </div>
+        <div class="form-group">
+          <label for="selSatPreset">การตั้งค่าวันเสาร์เริ่มต้น:</label>
+          <select id="selSatPreset" class="form-control form-select">
+            <option value="ALL_OFF">วันเสาร์หยุดทั้งหมด (SATURDAY HOLIDAY)</option>
+            <option value="ALT_WORK">ทำงานเสาร์เว้นเสาร์ (ALT WORK)</option>
+            <option value="ALL_WORK">วันเสาร์ทำงานทั้งหมด (WORKING SATURDAY)</option>
+          </select>
+        </div>
+        <p class="modal-hint">
+          * ระบบจะสร้างปฏิทิน 12 เดือนและสร้าง 12 รอบการจ่ายเงินเดือนให้อัตโนมัติ (ตัด 21 ถึง 20 เดือนหน้า จ่ายทุกสิ้นเดือน)
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAddYearModal()">ยกเลิก</button>
+        <button type="button" class="btn btn-primary" onclick="confirmAddNewYear()">สร้างปีปฏิทินนี้</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT DAY STATUS -->
+  <div class="modal-backdrop" id="editDayModal" style="display:none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>กำหนดสถานะวัน: <span id="modalDayDateDisplay"></span></h3>
+        <button type="button" class="modal-close" onclick="closeEditDayModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modalTargetDateStr" value="">
+        <div class="form-group">
+          <label>เลือกประเภทของวันนี้:</label>
+          <select id="modalDayTypeSelect" class="form-control form-select" onchange="onModalDayTypeSelectChange()">
+            <option value="NORMAL_WORKDAY">วันทำงานปกติ (NORMAL WORKDAY)</option>
+            <option value="NATIONAL_HOLIDAY">วันหยุดนักขัตฤกษ์ (NATIONAL HOLIDAY)</option>
+            <option value="MEMORIAL_HOLIDAY">วันหยุดประเพณีจ่ายเงิน (MEMORIAL DAY WITH PAY)</option>
+            <option value="ORBRAY_WORKDAY">วันทำงานพิเศษ (SPECIAL WORKDAY)</option>
+            <option value="SATURDAY_HOLIDAY">วันเสาร์หยุด (SATURDAY HOLIDAY)</option>
+            <option value="WORKING_SATURDAY">วันเสาร์ทำงานปกติ (WORKING SATURDAY)</option>
+            <option value="SUNDAY">วันอาทิตย์หยุด (SUNDAY HOLIDAY)</option>
+            <option value="BRIDGE_HOLIDAY">วันหยุดพิเศษ / เชื่อมวันหยุด (BRIDGE HOLIDAY)</option>
+          </select>
+        </div>
+        <div class="form-group" id="modalHolidayNameGroup">
+          <label for="modalHolidayNameInput">ชื่อวันหยุด / รายละเอียด (ถ้ามี):</label>
+          <input type="text" id="modalHolidayNameInput" class="form-control" placeholder="เช่น วันขึ้นปีใหม่, วันสงกรานต์">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeEditDayModal()">ยกเลิก</button>
+        <button type="button" class="btn btn-primary" onclick="saveDayStatusFromModal()">บันทึกสถานะ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SETTINGS SALARY & RATES -->
+  <div class="modal-backdrop" id="settingsSalaryModal" style="display:none;">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <div class="modal-header-info">
+          <div class="modal-salary-title-wrap">
+            <h3 class="modal-salary-title">
+              <span class="desktop-only-inline">ตั้งค่าโครงสร้างเงินเดือนและเบี้ยเลี้ยง</span>
+              <span class="mobile-only-inline">ตั้งค่าเงินเดือน & เบี้ยเลี้ยง</span>
+            </h3>
+            <div class="modal-salary-badges">
+              <span class="card-paydate-badge modal-badge-period" id="modalSalaryPeriodBadge">
+                <svg class="modal-badge-2d-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span class="desktop-only-inline">งวด: -</span>
+                <span class="mobile-only-inline">-</span>
+              </span>
+              <span class="card-paydate-badge modal-badge-status status-global" id="modalSalaryConfigStatusBadge">
+                <svg class="modal-badge-2d-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                <span class="desktop-only-inline">ใช้ค่ามาตรฐาน (Global)</span>
+                <span class="mobile-only-inline">ค่ามาตรฐาน</span>
+              </span>
+            </div>
+          </div>
+          <p class="subtitle text-muted small" id="modalSalaryPeriodSubtitle" style="margin:4px 0 0 0;">
+            <span class="desktop-only-inline">ปรับเปลี่ยนอัตราเงินเดือน เบี้ยเลี้ยง และสูตร OT สำหรับคำนวณเงินได้สุทธิ</span>
+            <span class="mobile-only-inline">กำหนดอัตราเงินเดือน เบี้ยเลี้ยง และสูตร OT</span>
+          </p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeSettingsSalaryModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-grid">
+          <!-- หมวด 1: เงินเดือน & เบี้ยเลี้ยงประจำ -->
+          <div class="settings-card">
+            <h4 class="settings-card-title">เงินเดือนและสวัสดิการประจำเดือน</h4>
+            <div class="form-group">
+              <label for="cfgBaseSalary">เงินเดือนพื้นฐาน (บาท):</label>
+              <div class="input-unit-group">
+                <input type="number" id="cfgBaseSalary" class="form-control" min="0" step="100" oninput="updateLiveOTPreview()">
+                <span class="unit-tag">บาท</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="cfgTransportationAllowance">เงินช่วยเหลือค่าเดินทาง (บาท):</label>
+              <div class="input-unit-group">
+                <input type="number" id="cfgTransportationAllowance" class="form-control" min="0" step="10">
+                <span class="unit-tag">บาท/เดือน</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="cfgDiligenceFullAmount">เบี้ยขยัน (กรณีมาครบวันทำงาน):</label>
+              <div class="input-unit-group">
+                <input type="number" id="cfgDiligenceFullAmount" class="form-control" min="0" step="10">
+                <span class="unit-tag">บาท/เดือน</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- หมวด 2: เบี้ยเลี้ยงรายวัน -->
+          <div class="settings-card">
+            <h4 class="settings-card-title">เบี้ยเลี้ยงรายวัน</h4>
+            <div class="form-group">
+              <label for="cfgFoodPerDay">ค่าอาหารประจำวันทำงาน:</label>
+              <div class="input-unit-group">
+                <input type="number" id="cfgFoodPerDay" class="form-control" min="0" step="1">
+                <span class="unit-tag">บาท/วัน</span>
+              </div>
+              <small class="text-muted">คูณด้วยจำนวนวันที่มาทำงานจริง (COME)</small>
+            </div>
+            <div class="form-group">
+              <label for="cfgOtMealPerDay">ค่าอาหารโอที (เมื่อทำ OT &ge; 1 ชม.):</label>
+              <div class="input-unit-group">
+                <input type="number" id="cfgOtMealPerDay" class="form-control" min="0" step="1">
+                <span class="unit-tag">บาท/วัน</span>
+              </div>
+              <small class="text-muted">คูณด้วยจำนวนวันที่มีการทำ OT (OT DAY)</small>
+            </div>
+          </div>
+
+          <!-- หมวด 3: อัตราคิดค่าล่วงเวลา (OT) -->
+          <div class="settings-card">
+            <h4 class="settings-card-title">สูตรการคิดค่าล่วงเวลา (OT)</h4>
+            <div class="ot-formula-banner">
+              <span>สูตรฐานค่าจ้าง:</span>
+              <strong>(เงินเดือน &divide; 30 &divide; 8)</strong>
+            </div>
+            <div class="form-row-3">
+              <div class="form-group">
+                <label for="cfgOt15Multiplier">วันปกติ:</label>
+                <input type="number" id="cfgOt15Multiplier" class="form-control" min="0" step="0.1">
+              </div>
+              <div class="form-group">
+                <label for="cfgOt1Multiplier">วันหยุด 8 ชม.:</label>
+                <input type="number" id="cfgOt1Multiplier" class="form-control" min="0" step="0.1">
+              </div>
+              <div class="form-group">
+                <label for="cfgOt3Multiplier">วันหยุด &gt;17:00:</label>
+                <input type="number" id="cfgOt3Multiplier" class="form-control" min="0" step="0.1">
+              </div>
+            </div>
+            <div class="live-ot-preview-box">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
+                <span>อัตราค่าจ้างต่อชั่วโมงปกติ:</span>
+                <strong style="font-size: 1rem;"><span id="cfgLiveOTRate">83.33</span> บาท/ชม.</strong>
+              </div>
+              <div style="font-size: 0.74rem; color: #71717a; margin-top: 3px;">
+                (คำนวณจาก: เงินเดือน <span id="cfgLiveOTSalary">20,000</span> &divide; 30 วัน &divide; 8 ชม.)
+              </div>
+            </div>
+          </div>
+
+          <!-- หมวด 4: เงินหักประกันสังคม -->
+          <div class="settings-card">
+            <h4 class="settings-card-title">การหักเงินสมทบประกันสังคม</h4>
+            <div class="form-group">
+              <label for="cfgSsoDeduction">ยอดหักประกันสังคมคงที่ (บาท):</label>
+              <div class="input-unit-group">
+                <input type="number" id="cfgSsoDeduction" class="form-control" min="0" step="1">
+                <span class="unit-tag">บาท/เดือน</span>
+              </div>
+              <small class="text-muted">คำนวณตามจริงหรือระบุยอดคงที่ (เช่น 875 บาท)</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-between salary-settings-footer" id="settingsSalaryModalFooter">
+        <div class="salary-modal-footer-utils" id="salaryModalFooterUtils">
+          <button type="button" class="btn btn-outline-danger btn-sm" onclick="resetSalaryConfigToDefault()" title="รีเซ็ตค่าในฟอร์มเป็นค่ามาตรฐานเริ่มต้น">
+            <span class="desktop-only-inline">รีเซ็ตเป็นค่าเริ่มต้น</span>
+            <span class="mobile-only-inline">รีเซ็ตค่า</span>
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearSalaryConfigToZero()" title="ปรับยอดเงินเดือน เบี้ยเลี้ยง และเงินหักเป็น 0 ทั้งหมด">
+            <span class="desktop-only-inline">เคลียร์เป็น 0 (ยังไม่เริ่มงาน)</span>
+            <span class="mobile-only-inline">เคลียร์เป็น 0</span>
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="btnResetPeriodSalaryConfig" onclick="resetPeriodSalaryConfigToDefault()" style="display: none;" title="ลบการตั้งค่าเฉพาะงวดนี้ แล้วกลับไปใช้ค่ามาตรฐาน">
+            <span class="desktop-only-inline">ล้างค่าเฉพาะงวดนี้</span>
+            <span class="mobile-only-inline">ล้างค่างวดนี้</span>
+          </button>
+          <button type="button" class="btn btn-outline-primary btn-sm" onclick="closeSettingsSalaryModal(); openFirebaseConfigModal();" title="ตั้งค่าและเชื่อมต่อเซิร์ฟเวอร์ FIREBASE CLOUD DATABASE">
+            <span class="desktop-only-inline">เซิร์ฟเวอร์ FIREBASE</span>
+            <span class="mobile-only-inline">Firebase</span>
+          </button>
+        </div>
+        <div class="salary-modal-footer-actions" id="salaryModalFooterActions">
+          <div class="salary-footer-sub-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeSettingsSalaryModal()">
+              ยกเลิก
+            </button>
+            <button type="button" class="btn btn-outline-primary" id="btnSaveSalaryForAllPeriods" onclick="saveSalaryConfigFromModal('all')" title="บันทึกใช้เป็นค่ามาตรฐานเริ่มต้นสำหรับทุกงวด">
+              <span class="desktop-only-inline">บันทึกใช้กับทุกงวด</span>
+              <span class="mobile-only-inline">ใช้กับทุกงวด</span>
+            </button>
+          </div>
+          <button type="button" class="btn btn-primary btn-save-period-main" id="btnSaveSalaryForPeriod" onclick="saveSalaryConfigFromModal('period')" title="บันทึกการตั้งค่าเฉพาะของงวดเดือนนี้เท่านั้น">
+            <svg class="btn-2d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            <span id="btnSaveSalaryPeriodLabel">บันทึกเฉพาะงวดนี้</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PIN AUTH & LOGIN -->
+  <div class="modal-backdrop" id="authModal" style="display:none;">
+    <div class="modal-dialog modal-dialog-sm">
+      <div class="modal-header">
+        <div class="auth-header-title">
+          <div>
+            <h3 id="authModalTitle">เข้าสู่ระบบด้วยรหัส PIN</h3>
+            <p class="subtitle text-muted small" style="margin:2px 0 0 0;">กรอกรหัส PIN 4–8 หลักเพื่อเข้าสู่ระบบ</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" onclick="closeAuthModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Auth Alerts -->
+        <div class="alert alert-danger" id="authErrorAlert" style="display:none;"></div>
+        <div class="alert alert-success" id="authSuccessAlert" style="display:none;"></div>
+
+        <div class="pin-login-box">
+          <div class="pin-display-wrapper">
+            <input type="password" id="pinDisplayInput" class="pin-input-field" maxlength="8" placeholder="••••" autocomplete="off" onkeydown="handlePinKeydown(event)" autofocus>
+            <button type="button" class="pin-toggle-visibility" onclick="togglePinVisibility()" title="แสดง/ซ่อนรหัส PIN">
+              <span id="pinVisibilityIcon">👁️</span>
+            </button>
+          </div>
+
+          <!-- Numeric Keypad -->
+          <div class="pin-keypad">
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('1')">1</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('2')">2</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('3')">3</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('4')">4</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('5')">5</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('6')">6</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('7')">7</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('8')">8</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('9')">9</button>
+            <button type="button" class="pin-key-btn pin-key-action" onclick="clearPinInput()" title="ล้างค่าทั้งหมด">C</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('0')">0</button>
+            <button type="button" class="pin-key-btn pin-key-action" onclick="backspacePinDigit()" title="ลบตัวเลขล่าสุด">⌫</button>
+          </div>
+
+          <button type="button" class="btn btn-primary btn-block btn-lg" id="btnAuthSubmit" onclick="submitPinLogin()" style="max-width: 290px;">
+            เข้าสู่ระบบ (LOGIN)
+          </button>
+        </div>
+
+        <div class="auth-footer-help">
+          <p class="text-muted small" style="margin: 0;">
+            กรุณาระบุรหัส PIN 4–8 หลักประจำตัวของคุณเพื่อเข้าสู่ระบบ
+          </p>
+          <div style="margin-top: 10px;">
+            <a href="javascript:void(0)" onclick="openFirebaseConfigModal()">ตั้งค่า FIREBASE PROJECT KEY</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: USER PROFILE & QUICK ACTIONS POPUP (MOBILE & DESKTOP) -->
+  <div class="modal-backdrop user-profile-modal-backdrop" id="userProfileModal" style="display: none; z-index: 1055;" onclick="handleUserProfileBackdropClick(event)">
+    <div class="modal-dialog modal-dialog-sm user-profile-modal-dialog" onclick="event.stopPropagation()">
+      <div class="modal-header user-profile-modal-header">
+        <div class="user-profile-header-left">
+          <div class="user-modal-avatar" id="userModalAvatar">J</div>
+          <div class="user-modal-details">
+            <div class="user-modal-name" id="userModalName">JITTRAKAN K.</div>
+            <div class="user-modal-role-row">
+              <span class="user-modal-role-pill role-admin" id="userModalRoleBadge">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                <span>ผู้ดูแลระบบ (ADMIN)</span>
+              </span>
+              <span class="user-modal-code" id="userModalCode">ID: 20523</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="modal-close" onclick="closeUserProfileModal()" aria-label="ปิด">&times;</button>
+      </div>
+
+      <div class="modal-body user-profile-modal-body">
+        <!-- Admin Switch User Card (Only shown for Admin) -->
+        <div class="user-modal-card" id="userModalAdminSection" style="display: none;">
+          <label class="user-modal-card-label" for="userModalSwitchSelect">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>สลับดูข้อมูลพนักงาน (SWITCH USER):</span>
+          </label>
+          <select id="userModalSwitchSelect" class="form-control user-modal-select" onchange="handleModalUserSwitch(this.value)">
+            <!-- Options populated dynamically -->
+          </select>
+        </div>
+
+        <!-- Quick Action Buttons List -->
+        <div class="user-modal-actions-list">
+          <button type="button" class="user-modal-action-btn" onclick="closeUserProfileModal(); openAccountModal();">
+            <div class="user-modal-action-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="user-modal-action-text">
+              <div class="user-modal-action-title">ข้อมูลบัญชีของฉัน (MY ACCOUNT)</div>
+              <div class="user-modal-action-desc">ดูและแก้ไขข้อมูลโปรไฟล์ รหัสพนักงาน รหัส PIN</div>
+            </div>
+            <span class="user-modal-arrow">›</span>
+          </button>
+
+          <button type="button" class="user-modal-action-btn" id="userModalManageUsersBtn" onclick="closeUserProfileModal(); openManageUsersModal();">
+            <div class="user-modal-action-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="user-modal-action-text">
+              <div class="user-modal-action-title">จัดการผู้ใช้ทั้งหมด (MANAGE USERS)</div>
+              <div class="user-modal-action-desc">เพิ่ม ลบ หรือแก้ไขข้อมูลและ PIN พนักงาน</div>
+            </div>
+            <span class="user-modal-arrow">›</span>
+          </button>
+
+          <button type="button" class="user-modal-action-btn" onclick="closeUserProfileModal(); openFirebaseConfigModal();">
+            <div class="user-modal-action-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+            </div>
+            <div class="user-modal-action-text">
+              <div class="user-modal-action-title">
+                <span>เซิร์ฟเวอร์ FIREBASE</span>
+                <span class="user-modal-status-pill status-online" id="userModalFbStatus">ONLINE</span>
+              </div>
+              <div class="user-modal-action-desc">ตรวจสอบการเชื่อมต่อและซิงค์ฐานข้อมูล Cloud</div>
+            </div>
+            <span class="user-modal-arrow">›</span>
+          </button>
+        </div>
+
+        <div class="user-modal-footer-sep"></div>
+
+        <button type="button" class="user-modal-logout-btn" onclick="closeUserProfileModal(); handleLogout();">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>ออกจากระบบ (LOGOUT)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MY ACCOUNT PROFILE -->
+  <div class="modal-backdrop" id="accountModal" style="display:none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div style="min-width: 0; flex: 1;">
+          <h3 style="margin:0; font-size: 0.95rem; font-weight: 800; line-height: 1.25;">ข้อมูลบัญชีของฉัน (MY ACCOUNT)</h3>
+          <p class="subtitle text-muted small" style="margin:2px 0 0 0; line-height: 1.25;">ดูและแก้ไขข้อมูลโปรไฟล์ รหัสพนักงาน รหัส PIN</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeAccountModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="accountAlert" class="alert alert-info" style="display:none;"></div>
+
+        <!-- Account Profile Overview Card -->
+        <div class="account-profile-card">
+          <div class="account-avatar-large" id="accAvatarLarge">👤</div>
+          <div class="account-profile-summary">
+            <div class="account-summary-name" id="accSummaryName">ADMIN</div>
+            <div class="account-summary-tags">
+              <span class="badge-account-role" id="accSummaryRole">ADMIN</span>
+              <span class="badge-account-code" id="accSummaryCode">ID: 20523</span>
+              <span class="badge-account-dept" id="accSummaryDept">ผู้ดูแลระบบ</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Edit Form -->
+        <form id="accountProfileForm" onsubmit="handleSaveAccountProfile(event)">
+          <div class="account-fields-grid">
+            <div class="form-group">
+              <label for="accName" class="user-form-label">ชื่อ - นามสกุล: <span class="text-danger">*</span></label>
+              <input type="text" id="accName" class="form-control user-form-input" required placeholder="เช่น ADMIN หรือ นายสมชาย ใจดี">
+            </div>
+
+            <div class="form-group">
+              <label for="accCompany" class="user-form-label">ชื่อบริษัท / สังกัด: <span class="text-danger">*</span></label>
+              <input type="text" id="accCompany" class="form-control user-form-input" required placeholder="เช่น CACULATION SALARY">
+            </div>
+
+            <div class="form-group">
+              <label for="accEmpCode" class="user-form-label">รหัสประจำตัวพนักงาน: <span class="text-danger">*</span></label>
+              <input type="text" id="accEmpCode" class="form-control font-mono user-form-input" required placeholder="เช่น 20523">
+            </div>
+
+            <div class="form-group">
+              <label for="accDept" class="user-form-label">แผนก / ฝ่าย: <span class="text-danger">*</span></label>
+              <input type="text" id="accDept" class="form-control user-form-input" required placeholder="เช่น ฝ่ายปฏิบัติการ">
+            </div>
+
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label for="accPin" class="user-form-label">รหัส PIN เข้าสู่ระบบ (4–8 หลัก): <span class="text-danger">*</span></label>
+              <div class="input-with-action">
+                <input type="password" id="accPin" class="form-control font-mono user-form-input" pattern="\d{4,8}" maxlength="8" required placeholder="••••">
+                <button type="button" class="btn-input-toggle" onclick="toggleAccPinVisibility()" title="แสดง/ซ่อน PIN">
+                  <span id="accPinIcon">👁️</span>
+                </button>
+              </div>
+              <small class="form-text text-muted" style="font-size:0.78rem;">ใช้สำหรับกดรหัสผ่านเข้าสู่ระบบในครั้งต่อไป</small>
+            </div>
+          </div>
+
+          <div class="modal-footer modal-footer-custom" style="padding: 14px 0 0 0; margin-top: 18px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+            <button type="button" class="btn btn-secondary" onclick="goBackToUserProfileModal()">← ย้อนกลับ</button>
+            <button type="submit" class="btn btn-primary" id="btnSubmitAccountProfile" onclick="handleSaveAccountProfile(event)">
+              บันทึกข้อมูลบัญชี
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MANAGE USERS & PINS (ADMIN ONLY) -->
+  <div class="modal-backdrop" id="manageUsersModal" style="display:none;">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <div style="min-width: 0; flex: 1;">
+          <h3 style="margin:0; font-size: 0.95rem; font-weight: 800; line-height: 1.25;">จัดการผู้ใช้ทั้งหมด (MANAGE USERS)</h3>
+          <p class="subtitle text-muted small" style="margin:2px 0 0 0; line-height: 1.25;">เพิ่ม ลบ หรือแก้ไขข้อมูลและ PIN พนักงาน</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeManageUsersModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="manageUsersAlert" class="alert alert-info" style="display:none;"></div>
+
+        <!-- Add New User Card -->
+        <div class="user-mgmt-card">
+          <div class="user-mgmt-card-header">
+            <h4 class="user-mgmt-card-title">เพิ่มพนักงานใหม่เข้าสู่ระบบ</h4>
+          </div>
+          <form id="addNewUserForm" onsubmit="handleAddNewUserSubmit(event)">
+            <div class="user-mgmt-input-grid">
+              <div class="form-group mb-0">
+                <label for="newUserName" class="user-form-label">ชื่อ-นามสกุล พนักงาน:</label>
+                <input type="text" id="newUserName" class="form-control user-form-input" placeholder="เช่น นายสมชาย ใจดี" required>
+              </div>
+              <div class="form-group mb-0">
+                <label for="newUserEmpCode" class="user-form-label">รหัสพนักงาน:</label>
+                <input type="text" id="newUserEmpCode" class="form-control user-form-input" placeholder="เช่น EMP-003">
+              </div>
+              <div class="form-group mb-0">
+                <label for="newUserDept" class="user-form-label">แผนก / ฝ่าย:</label>
+                <input type="text" id="newUserDept" class="form-control user-form-input" placeholder="เช่น ฝ่ายปฏิบัติการ">
+              </div>
+              <div class="form-group mb-0">
+                <label for="newUserPin" class="user-form-label">รหัส PIN (4–8 หลัก):</label>
+                <input type="text" id="newUserPin" class="form-control font-mono user-form-input text-center" placeholder="3333" pattern="\d{4,8}" maxlength="8" required>
+              </div>
+              <div>
+                <button type="submit" class="btn btn-primary btn-save-user">
+                  บันทึกเพิ่ม
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- System Users List Section -->
+        <div class="user-mgmt-section-header">
+          <div>
+            <h4 style="color:var(--text-primary); font-size:0.92rem; font-weight:800; margin:0;">
+              รายชื่อผู้ใช้ทั้งหมดในระบบ (SYSTEM USERS)
+            </h4>
+            <span class="text-muted small" style="font-size:0.72rem;">คลิกปุ่มเพื่อแก้ไขหรือลบพนักงาน</span>
+          </div>
+          <button type="button" class="btn btn-outline-danger btn-xs" onclick="confirmClearAllStaffUsers()" title="ลบรายชื่อพนักงานทั้งหมด เหลือเฉพาะบัญชี ADMIN">
+            ลบพนักงานทั้งหมด
+          </button>
+        </div>
+
+        <!-- Desktop Table View (Hidden on mobile) -->
+        <div class="user-table-wrapper desktop-only-table">
+          <table class="users-table-modern">
+            <thead>
+              <tr>
+                <th style="width: 85px; text-align: center;">สิทธิ์</th>
+                <th style="text-align: left;">ชื่อผู้ใช้งาน / พนักงาน</th>
+                <th style="width: 100px; text-align: center;">รหัสพนักงาน</th>
+                <th style="text-align: left;">แผนก</th>
+                <th style="width: 105px; text-align: center;">รหัส PIN</th>
+                <th style="width: 150px; text-align: center;">การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="manageUsersTableBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile Cards View (Visible only on mobile <= 768px and in simulator) -->
+        <div id="manageUsersCardsMobile" class="user-cards-mobile-container mobile-only-cards">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+        <button type="button" class="btn btn-secondary" onclick="goBackToUserProfileModal()">← ย้อนกลับ</button>
+        <button type="button" class="btn btn-outline-secondary" onclick="closeManageUsersModal()">ปิดหน้าต่าง</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT USER (ADMIN ONLY) -->
+  <div class="modal-backdrop" id="editUserModal" style="display:none; z-index: 1060;">
+    <div class="modal-dialog modal-dialog-sm">
+      <div class="modal-header">
+        <div>
+          <h3 style="margin:0; font-size: 1.1rem;">แก้ไขข้อมูลพนักงาน</h3>
+          <p class="subtitle text-muted small" style="margin:2px 0 0 0;">ปรับปรุงชื่อ, รหัสพนักงาน, แผนก หรือรหัส PIN</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeEditUserModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="editUserAlert" class="alert alert-danger" style="display:none;"></div>
+        <form id="editUserForm" onsubmit="handleSaveEditUserSubmit(event)">
+          <input type="hidden" id="editUserId">
+          <div class="form-group">
+            <label for="editUserName" class="user-form-label">ชื่อ - นามสกุล: <span class="text-danger">*</span></label>
+            <input type="text" id="editUserName" class="form-control user-form-input" required placeholder="เช่น นายสมชาย ใจดี">
+          </div>
+          <div class="form-group">
+            <label for="editUserEmpCode" class="user-form-label">รหัสประจำตัวพนักงาน: <span class="text-danger">*</span></label>
+            <input type="text" id="editUserEmpCode" class="form-control font-mono user-form-input" required placeholder="เช่น EMP-001">
+          </div>
+          <div class="form-group">
+            <label for="editUserDept" class="user-form-label">แผนก / ฝ่าย: <span class="text-danger">*</span></label>
+            <input type="text" id="editUserDept" class="form-control user-form-input" required placeholder="เช่น ฝ่ายปฏิบัติการ">
+          </div>
+          <div class="form-group">
+            <label for="editUserPin" class="user-form-label">รหัส PIN เข้าสู่ระบบ (4–8 หลัก): <span class="text-danger">*</span></label>
+            <input type="text" id="editUserPin" class="form-control font-mono user-form-input text-center" pattern="\d{4,8}" maxlength="8" required placeholder="1234">
+          </div>
+          <div class="modal-footer modal-footer-custom" style="padding: 14px 0 0 0; margin-top: 16px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 8px;">
+            <button type="button" class="btn btn-secondary" onclick="closeEditUserModal()">ยกเลิก</button>
+            <button type="submit" class="btn btn-primary">
+              บันทึกการแก้ไข
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: FIREBASE CONFIG KEYS -->
+  <div class="modal-backdrop" id="firebaseConfigModal" style="display:none; z-index: 1070;">
+    <div class="modal-dialog fb-config-dialog" style="max-width: 620px;">
+      <div class="modal-header">
+        <div style="min-width: 0; flex: 1;">
+          <h3 style="margin:0; font-size: 0.95rem; font-weight: 800; line-height: 1.25;">เซิร์ฟเวอร์ Firebase</h3>
+          <p class="subtitle text-muted small" style="margin:2px 0 0 0; line-height: 1.25;">ตรวจสอบการเชื่อมต่อและซิงค์ฐานข้อมูล Cloud Firestore</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeFirebaseConfigModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+        <!-- Live Status Banner -->
+        <div id="fbServerStatusBanner" class="fb-server-status-banner"></div>
+
+        <!-- Alert Notification Box -->
+        <div id="fbConfigAlert" class="alert" style="display: none; margin-bottom: 14px;"></div>
+
+        <!-- Auto-Paste & Auto-Detect Card -->
+        <div class="fb-autopaste-card">
+          <div class="fb-card-header">
+            <div class="fb-card-title-group">
+              <span class="fb-card-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+              </span>
+              <span class="fb-card-title">วางโค้ด Firebase Configuration</span>
+            </div>
+            <span class="fb-card-badge">AUTO FILL</span>
+          </div>
+
+          <div class="fb-guide-wrapper">
+            <div class="fb-guide-intro">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <span>คัดลอกโค้ดจาก Firebase:</span>
+            </div>
+            <div class="fb-path-bar">
+              <span class="fb-path-node">Project settings</span>
+              <span class="fb-path-sep">›</span>
+              <span class="fb-path-node">Your apps</span>
+              <span class="fb-path-sep">›</span>
+              <span class="fb-path-node fb-path-active">Config</span>
+            </div>
+          </div>
+
+          <div class="fb-textarea-wrapper">
+            <textarea id="fbCfgRawPaste" class="form-control font-mono preserve-case" rows="4" placeholder="// วางโค้ดคอนฟิกจาก Firebase ที่นี่&#10;const firebaseConfig = {&#10;  apiKey: &quot;AIzaSy...&quot;,&#10;  projectId: &quot;my-salary-app&quot;,&#10;  ...&#10;};"></textarea>
+          </div>
+
+          <div class="fb-autopaste-actions">
+            <div class="fb-autopaste-tip">
+              <span>💡</span>
+              <span>รองรับทั้งรูปแบบ <code>JavaScript</code> และ <code>JSON</code></span>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm fb-parse-btn" onclick="parseRawFirebaseConfig()">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              แยกและเติมข้อมูลอัตโนมัติ (Auto Fill)
+            </button>
+          </div>
+        </div>
+
+        <div style="margin: 18px 0 12px 0; border-top: 1px solid var(--border-color); position: relative; text-align: center;">
+          <span style="position: relative; top: -10px; background: #fff; padding: 0 10px; font-size: 0.78rem; color: #71717a; font-weight: 700;">
+            หรือกรอกข้อมูลพารามิเตอร์เซิร์ฟเวอร์ด้วยตนเอง
+          </span>
+        </div>
+
+        <!-- Form Fields Grid -->
+        <div class="fb-form-grid">
+          <div class="form-group">
+            <label for="fbCfgProjectId">Project ID (รหัสโครงการ) <span class="text-danger">*</span>:</label>
+            <input type="text" id="fbCfgProjectId" class="form-control font-mono preserve-case" placeholder="เช่น my-company-payroll">
+          </div>
+
+          <div class="form-group">
+            <label for="fbCfgApiKey">API Key <span class="text-danger">*</span>:</label>
+            <div class="input-unit-group">
+              <input type="password" id="fbCfgApiKey" class="form-control font-mono preserve-case" placeholder="AIzaSy...">
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleFbApiKeyVisibility()" style="border:none; background:transparent; padding: 0 8px;" title="แสดง/ซ่อน API Key">
+                <span id="fbApiKeyToggleIcon">👁️</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="fbCfgAuthDomain">Auth Domain:</label>
+            <input type="text" id="fbCfgAuthDomain" class="form-control font-mono preserve-case" placeholder="เช่น my-company-payroll.firebaseapp.com">
+          </div>
+
+          <div class="form-group">
+            <label for="fbCfgStorageBucket">Storage Bucket:</label>
+            <input type="text" id="fbCfgStorageBucket" class="form-control font-mono preserve-case" placeholder="เช่น my-company-payroll.appspot.com">
+          </div>
+
+          <div class="form-group">
+            <label for="fbCfgMessagingSenderId">Messaging Sender ID:</label>
+            <input type="text" id="fbCfgMessagingSenderId" class="form-control font-mono preserve-case" placeholder="เช่น 123456789012">
+          </div>
+
+          <div class="form-group">
+            <label for="fbCfgAppId">App ID:</label>
+            <input type="text" id="fbCfgAppId" class="form-control font-mono preserve-case" placeholder="เช่น 1:123456789012:web:abcdef">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer modal-footer-between fb-modal-footer">
+        <div class="fb-footer-left">
+          <button type="button" class="btn btn-outline-info" id="btnTestFbConn" onclick="testFirebaseConfigFromModal()" title="ทดสอบการเชื่อมต่อกับเซิร์ฟเวอร์ Firebase">
+            ทดสอบการเชื่อมต่อ
+          </button>
+          <button type="button" class="btn btn-outline-secondary" onclick="resetFirebaseConfigDefault()" title="คืนค่าเป็นโหมด Local Storage ออฟไลน์">
+            คืนค่าเริ่มต้น (โหมด Local)
+          </button>
+        </div>
+        <div class="fb-footer-right">
+          <button type="button" class="btn btn-secondary" onclick="goBackToUserProfileModal()">← ย้อนกลับ</button>
+          <button type="button" class="btn btn-primary" id="btnSaveFbConfig" onclick="saveFirebaseConfigFromModal()">
+            บันทึกและเชื่อมต่อเซิร์ฟเวอร์
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD NEW COMPANY & DATE CALENDAR -->
+  <div class="modal-backdrop" id="addCompanyModal" style="display:none; z-index: 1050;">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <div>
+          <h3>เพิ่มบริษัทใหม่และกำหนดข้อมูลวันที่</h3>
+          <p class="modal-subtitle">บันทึกข้อมูลบริษัทพร้อมสร้างปฏิทินวันทำงาน วันหยุด และรอบเงินเดือนอัตโนมัติ</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeAddCompanyModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Section 1: Company Profile -->
+        <div class="form-section-title">1. ข้อมูลบริษัท (COMPANY PROFILE)</div>
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label for="compNewName">ชื่อบริษัท: <span class="text-danger">*</span></label>
+            <input type="text" id="compNewName" class="form-control" placeholder="เช่น SIAM DENSO, TOYOTA, บจก. ตัวอย่าง" required>
+          </div>
+          <div class="form-group">
+            <label for="compNewCode">รหัสย่อ / ตัวย่อ (Code):</label>
+            <input type="text" id="compNewCode" class="form-control" placeholder="เช่น SDM, TTC, EX" maxlength="12">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="compNewDesc">รายละเอียด / หมายเหตุสังกัด:</label>
+          <input type="text" id="compNewDesc" class="form-control" placeholder="เช่น สำนักงานใหญ่ หรือ โรงงาน 1">
+        </div>
+
+        <!-- Scanner Prompt Banner -->
+        <div class="scan-prompt-banner">
+          <div class="scan-prompt-icon">📷</div>
+          <div class="scan-prompt-content">
+            <div class="scan-prompt-title">มีรูปถ่ายการ์ดปฏิทินของบริษัทหรือไม่?</div>
+            <div class="scan-prompt-desc">อัพโหลดรูปภาพให้ระบบ AI ช่วยวิเคราะห์วันทำงาน วันเสาร์ทำงาน และวันหยุดนักขัตฤกษ์ให้อัตโนมัติ</div>
+          </div>
+          <button type="button" class="btn btn-sm btn-dark" onclick="closeAddCompanyModal(); openCalendarScanModal();">
+            สแกนจากรูปถ่าย AI ➔
+          </button>
+        </div>
+
+        <!-- Section 2: Date & Calendar Setup -->
+        <div class="form-section-title mt-3">2. ข้อมูลวันที่และปฏิทินวันทำงาน (DATE & WORK CALENDAR SETUP)</div>
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label for="compNewYearBE">ปี พ.ศ. ปฏิทินเริ่มต้น: <span class="text-danger">*</span></label>
+            <input type="number" id="compNewYearBE" class="form-control" placeholder="2569" min="2450" max="2700" value="2569" oninput="updateCompNewYearCEPreview()">
+            <small class="text-muted">ปี ค.ศ.: <span id="compNewYearCEPreview">2026</span></small>
+          </div>
+          <div class="form-group">
+            <label for="compNewSatPreset">รูปแบบวันทำงานและวันเสาร์: <span class="text-danger">*</span></label>
+            <select id="compNewSatPreset" class="form-control form-select">
+              <option value="ALL_OFF">วันเสาร์หยุดทั้งหมด (ทำงาน จันทร์-ศุกร์ | หยุด ส.-อา.)</option>
+              <option value="ALT_WORK">ทำงานเสาร์เว้นเสาร์ (ALT SATURDAY WORK)</option>
+              <option value="ALL_WORK">วันเสาร์ทำงานทั้งหมด (ทำงาน จันทร์-เสาร์)</option>
+              <option value="CLONE_ORBRAY">คัดลอกจากแม่แบบปฏิทิน Orbray 2569 (16 เสาร์ทำงาน)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem;">
+            <input type="checkbox" id="compNewUseNationalHols" checked style="width: 16px; height: 16px; cursor: pointer;">
+            <span><strong>ใส่วันหยุดนักขัตฤกษ์ประจำปีอัตโนมัติ</strong> (วันหยุดนักขัตฤกษ์ตามประกาศทางการ เช่น ปีใหม่ สงกรานต์ แรงงาน ฯลฯ)</span>
+          </label>
+        </div>
+
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label for="compNewMemorialHols">วันหยุดประเพณี / วันหยุดบริษัทเพิ่มเติม:</label>
+            <input type="text" id="compNewMemorialHols" class="form-control" placeholder="เช่น 2026-09-19 (คั่นด้วยจุลภาคหากมีหลายวัน)">
+            <small class="text-muted">วันหยุดประเพณีที่จ่ายค่าจ้าง (Memorial Day with Pay)</small>
+          </div>
+          <div class="form-group">
+            <label for="compNewSpecialWorkdays">วันทำงานพิเศษของบริษัท:</label>
+            <input type="text" id="compNewSpecialWorkdays" class="form-control" placeholder="เช่น 2026-10-17 (คั่นด้วยจุลภาคหากมีหลายวัน)">
+            <small class="text-muted">วันเสาร์หรือวันหยุดที่บริษัทกำหนดให้มาทำงานพิเศษ</small>
+          </div>
+        </div>
+
+        <div class="modal-hint-box">
+          <div class="hint-icon">💡</div>
+          <div class="hint-text">
+            <strong>คำแนะนำ:</strong> เมื่อกดบันทึก ระบบจะสร้างปฏิทิน 12 เดือนและรอบเงินเดือน 12 งวด (ตัดรอบ 21 ถึง 20) ของบริษัทนี้ทันที โดยท่านสามารถเปิดแท็บ <strong>"ปฏิทินวันทำงาน"</strong> เพื่อคลิกเปลี่ยนสถานะวันทำงานหรือวันหยุดในปฏิทินได้ตามต้องการ
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAddCompanyModal()">ยกเลิก</button>
+        <button type="button" class="btn btn-primary" onclick="confirmAddNewCompany()">สร้างบริษัทและบันทึกข้อมูลวันที่</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MANAGE COMPANIES -->
+  <div class="modal-backdrop" id="manageCompaniesModal" style="display:none; z-index: 1050;">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <div>
+          <h3>จัดการรายชื่อบริษัทและข้อมูลปฏิทิน</h3>
+          <p class="modal-subtitle">รายชื่อบริษัททั้งหมดในระบบ พร้อมปีปฏิทินและสถานะการเลือกแสดงผล</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeManageCompaniesModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="manage-comp-top-bar">
+          <span class="manage-comp-count">บริษัททั้งหมด: <strong id="manageCompTotalCount">1</strong> แห่ง</span>
+          <button type="button" class="btn btn-primary btn-sm" onclick="closeManageCompaniesModal(); openAddCompanyModal();">
+            + เพิ่มบริษัทใหม่
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table manage-companies-table">
+            <thead>
+              <tr>
+                <th>ชื่อบริษัท</th>
+                <th>รหัสย่อ</th>
+                <th>ปีปฏิทินที่มี</th>
+                <th>สถานะการเลือก</th>
+                <th style="text-align: right;">การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="manageCompaniesTableBody">
+              <!-- populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeManageCompaniesModal()">ปิด</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MOBILE ATTENDANCE QUICK EDIT -->
+  <div class="modal-backdrop" id="modalAttendanceEdit" style="display:none; z-index: 1070;" onclick="if(event.target.id === 'modalAttendanceEdit') closeAttendanceEditModal()">
+    <div class="modal-dialog att-edit-modal-dialog">
+      <div class="modal-header">
+        <div>
+          <h3 class="m-0" style="font-size: 1.05rem; display: flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            แก้ไขการลงเวลาทำงาน
+          </h3>
+          <p class="subtitle m-0" id="attEditModalSubtitle" style="font-size: 0.76rem; margin-top: 2px;">วันที่ --/--/----</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeAttendanceEditModal()">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px;">
+        <input type="hidden" id="attEditRowIndex" value="-1">
+
+        <!-- แถบประเภทวัน -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: var(--gray-50); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 14px;">
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary);">ประเภทวัน:</span>
+          <span id="attEditDayBadge" class="day-badge badge-workday">วันทำงานปกติ</span>
+        </div>
+
+        <!-- มาทำงานในวันนี้ -->
+        <div style="padding: 12px 14px; background: var(--bg-surface); border: 1.5px solid var(--border-color); border-radius: 10px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <strong style="font-size: 0.92rem; display: block; color: var(--text-primary);">มาทำงานในวันนี้</strong>
+            <span style="font-size: 0.72rem; color: var(--text-muted);" id="attEditWorkStatusHint">บันทึกเวลาเข้า-ออกงาน</span>
+          </div>
+          <input type="checkbox" id="attEditWorkDayCheck" style="width: 22px; height: 22px; accent-color: var(--black); cursor: pointer;" onchange="onAttEditModalWorkDayToggle(this.checked)">
+        </div>
+
+        <!-- ประเภทการลา (แสดงเมื่อไม่ได้มาทำงาน) -->
+        <div id="attEditLeaveGroup" style="display: none; padding: 12px 14px; background: var(--gray-50); border: 1.5px solid var(--border-color); border-radius: 10px; margin-bottom: 14px;">
+          <label for="attEditLeaveTypeSelect" style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">ประเภทการลา (วันที่ไม่มาทำงาน)</label>
+          <select id="attEditLeaveTypeSelect" class="form-control form-select" style="height: 38px; font-weight: 600;" onchange="onAttEditModalLeaveChange(this.value)">
+            <option value="">- ไม่ได้ใช้สิทธิ์ลา (ขาดงาน) -</option>
+            <option value="ANNUAL">ลาพักร้อน (ไม่หักเบี้ยขยัน)</option>
+            <option value="SICK">ลาป่วย (หักเบี้ยขยัน)</option>
+            <option value="PERSONAL">ลากิจ (หักเบี้ยขยัน)</option>
+            <option value="OTHER">ลาอื่นๆ (หักเบี้ยขยัน)</option>
+          </select>
+          <div id="attEditLeaveDiligenceHint" style="font-size: 0.72rem; margin-top: 6px; font-weight: 600; color: var(--text-muted);">
+            * การลาที่ไม่ใช่ "ลาพักร้อน" หรือการขาดงานในวันทำงานปกติ จะทำให้ถูกหักเบี้ยขยัน
+          </div>
+        </div>
+
+        <!-- ฟิลด์เวลาเข้า & เวลาออก -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+          <div>
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px;">เวลาเข้างาน</label>
+            <select id="attEditInTimeSelect" class="form-control form-select text-center font-monospace" style="height: 38px; font-weight: 700;" onchange="onAttEditModalTimeChange(this.value)">
+              <!-- Options populated dynamically -->
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px;">เวลาออกงาน</label>
+            <select id="attEditOutTimeSelect" class="form-control form-select text-center font-monospace" style="height: 38px; font-weight: 700;" onchange="onAttEditModalTimeChange(this.value)">
+              <!-- Options populated dynamically -->
+            </select>
+          </div>
+        </div>
+
+        <!-- สรุปผลการคิด OT สดๆ -->
+        <div style="padding: 12px 14px; background: var(--gray-50); border: 1px solid var(--border-subtle); border-radius: 8px;">
+          <div style="font-size: 0.76rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; display: flex; justify-content: space-between;">
+            <span>สรุปชั่วโมง OT วันนี้:</span>
+            <span id="attEditTotalOTSum" class="font-monospace text-primary font-weight-bold">0.0 ชม.</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--text-secondary); margin-bottom: 4px;">
+            <span>• OT 1.5 เท่า (วันปกติหลัง 17:00):</span>
+            <span class="font-monospace font-weight-bold" id="attEditPreviewOT15">0.0 ชม.</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--text-secondary); margin-bottom: 4px;">
+            <span>• Holiday 1.0 เท่า (วันหยุด 08:30-17:00):</span>
+            <span class="font-monospace font-weight-bold" id="attEditPreviewHol">0.0 ชม.</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--text-secondary);">
+            <span>• OT Holiday 3.0 เท่า (วันหยุดหลัง 17:00):</span>
+            <span class="font-monospace font-weight-bold" id="attEditPreviewOTHol">0.0 ชม.</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px;">
+        <button type="button" class="btn btn-secondary" onclick="closeAttendanceEditModal()" style="width: 100%;">ยกเลิก</button>
+        <button type="button" class="btn btn-primary" onclick="saveAttendanceEditModal()" style="width: 100%; font-weight: 700;">บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT COMPANY -->
+  <div class="modal-backdrop" id="editCompanyModal" style="display:none; z-index: 1060;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>แก้ไขข้อมูลบริษัท</h3>
+        <button type="button" class="modal-close" onclick="closeEditCompanyModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editCompanyTargetId">
+        <div class="form-group">
+          <label for="editCompanyName">ชื่อบริษัท: <span class="text-danger">*</span></label>
+          <input type="text" id="editCompanyName" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="editCompanyCode">รหัสย่อ (Code):</label>
+          <input type="text" id="editCompanyCode" class="form-control" maxlength="12">
+        </div>
+        <div class="form-group">
+          <label for="editCompanyDesc">รายละเอียด / หมายเหตุสังกัด:</label>
+          <input type="text" id="editCompanyDesc" class="form-control">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeEditCompanyModal()">ยกเลิก</button>
+        <button type="button" class="btn btn-primary" onclick="saveEditCompany()">บันทึกการแก้ไข</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AI CALENDAR IMAGE SCANNER & ANALYZER -->
+  <div class="modal-backdrop" id="calendarScanModal" style="display:none; z-index: 1060;">
+    <div class="modal-dialog modal-dialog-xl">
+      <div class="modal-header">
+        <div class="scan-modal-header-info">
+          <div class="scan-header-badge">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span>AI CALENDAR SCANNER & ANALYZER</span>
+          </div>
+          <h3 style="margin: 4px 0 0 0;">สแกนและวิเคราะห์รูปปฏิทินบริษัทอัตโนมัติ</h3>
+          <p class="modal-subtitle">อัพโหลดรูปภาพการ์ดปฏิทิน ระบบจะวิเคราะห์วันทำงาน, วันเสาร์ทำงาน, วันหยุดนักขัตฤกษ์ และจัดวันลงปฏิทินให้อัตโนมัติ</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeCalendarScanModal()">&times;</button>
+      </div>
+
+      <div class="modal-body scan-modal-body">
+        <!-- Top Grid: Left is Upload Zone & Config, Right is Image Preview -->
+        <div class="scan-top-grid">
+          <!-- Left: Upload & Target Configuration -->
+          <div class="scan-controls-col">
+            <!-- Step 1: Upload Image -->
+            <div class="scan-step-box">
+              <div class="scan-step-title">
+                <span class="step-num">1</span>
+                <span>อัพโหลดรูปถ่ายการ์ดปฏิทิน (UPLOAD CALENDAR IMAGE)</span>
+              </div>
+              
+              <div class="scan-dropzone" id="scanDropzone" onclick="document.getElementById('scanFileInput').click()">
+                <input type="file" id="scanFileInput" accept="image/*" multiple style="display:none;" onchange="handleScanFilesSelected(this.files)">
+                <div class="dropzone-icon">
+                  <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                </div>
+                <div class="dropzone-text"><strong>คลิกเพื่อเลือกไฟล์รูปภาพ</strong> หรือลากรูปมาวางที่นี่</div>
+                <div class="dropzone-sub">รองรับไฟล์ JPG, PNG, WEBP สูงสุด 2 รูป (เช่น หน้า-หลัง หรือ 6 เดือนแรก-หลัง)</div>
+              </div>
+
+              <div class="scan-sample-trigger-row">
+                <span class="text-muted small">หรือทดสอบด้วยภาพตัวอย่าง:</span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadSampleOrbrayImages()">
+                  📂 โหลดตัวอย่างปฏิทิน Orbray 2569 (Image 1 & 2)
+                </button>
+              </div>
+            </div>
+
+            <!-- Step 2: Target & Engine Settings -->
+            <div class="scan-step-box mt-3">
+              <div class="scan-step-title">
+                <span class="step-num">2</span>
+                <span>เลือกบริษัทเป้าหมายและระบบวิเคราะห์ (TARGET & ENGINE)</span>
+              </div>
+
+              <div class="form-group mb-2">
+                <label class="scan-label">นำข้อมูลปฏิทินไปบันทึกให้กับ:</label>
+                <div class="scan-radio-group">
+                  <label class="scan-radio-opt">
+                    <input type="radio" name="scanTargetComp" id="scanRadioCurrent" value="CURRENT" checked onchange="toggleScanCompanyTarget(this.value)">
+                    <span>บริษัทปัจจุบัน (<strong id="scanCurrentCompName">ORBRAY</strong>)</span>
+                  </label>
+                  <label class="scan-radio-opt">
+                    <input type="radio" name="scanTargetComp" id="scanRadioNew" value="NEW" onchange="toggleScanCompanyTarget(this.value)">
+                    <span>สร้างเป็นบริษัทใหม่</span>
+                  </label>
+                </div>
+              </div>
+
+              <div id="scanNewCompFields" style="display:none;" class="scan-new-comp-box mb-2">
+                <div class="form-group">
+                  <label for="scanInpNewCompName">ชื่อบริษัทใหม่ที่ต้องการสร้าง: <span class="text-danger">*</span></label>
+                  <input type="text" id="scanInpNewCompName" class="form-control" placeholder="เช่น บริษัท ตัวอย่าง จำกัด">
+                </div>
+                <div class="form-group">
+                  <label for="scanInpNewCompCode">รหัสย่อ (Code):</label>
+                  <input type="text" id="scanInpNewCompCode" class="form-control" placeholder="เช่น EX, SAMPLE">
+                </div>
+              </div>
+
+              <div class="form-row-2col mb-2">
+                <div class="form-group">
+                  <label for="scanTargetYearBE">ปี พ.ศ. ปฏิทิน:</label>
+                  <input type="number" id="scanTargetYearBE" class="form-control" value="2569" min="2400" max="2700" oninput="onScanYearChange(this.value)">
+                </div>
+                <div class="form-group">
+                  <label>ปี ค.ศ. (CE):</label>
+                  <input type="text" id="scanTargetYearCE" class="form-control" value="2026" readonly disabled>
+                </div>
+              </div>
+
+              <!-- Gemini API Key Accordion / Field -->
+              <div class="scan-api-key-box mb-3">
+                <div class="scan-api-header" onclick="toggleScanApiKeyAccordion()">
+                  <div class="api-header-left">
+                    <span class="api-sparkle">✨</span>
+                    <strong>วิเคราะห์ด้วย Google Gemini AI Vision (ละเอียดสูงสุด)</strong>
+                  </div>
+                  <span class="api-toggle-icon" id="scanApiKeyToggleIcon">▾</span>
+                </div>
+                <div class="scan-api-body" id="scanApiKeyBody">
+                  <div class="form-group mb-1">
+                    <label for="scanGeminiApiKey">Gemini API Key (บันทึกในเครื่องปลอดภัย ไม่ส่งต่อใคร):</label>
+                    <input type="password" id="scanGeminiApiKey" class="form-control font-mono" placeholder="AIzaSy..." oninput="onScanApiKeyInput(this.value)">
+                  </div>
+                  <div class="api-hint-row">
+                    <small class="text-muted">ใช้บริการ Gemini 1.5/2.0 Flash ฟรี รับคีย์ได้ที่ <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a></small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons for Analysis -->
+              <div class="scan-action-buttons">
+                <button type="button" class="btn btn-primary btn-scan-action" id="btnRunAIScan" onclick="startCalendarAnalysis('AI')">
+                  <span class="btn-spin" id="scanAISpin" style="display:none;">⏳ </span>
+                  <span>✨ เริ่มวิเคราะห์ภาพด้วย AI Vision</span>
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-scan-action" id="btnRunPresetScan" onclick="startCalendarAnalysis('PRESET')">
+                  <span>⚡ วิเคราะห์ด้วย Smart Preset (ไม่ต้องใช้คีย์)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Image Previews & Detected Legend -->
+          <div class="scan-preview-col">
+            <div class="scan-step-title d-flex justify-content-between align-items-center">
+              <span>ตัวอย่างรูปภาพที่อัพโหลด (<span id="scanImageCount">0</span> รูป)</span>
+              <button type="button" class="btn btn-link btn-sm text-danger p-0" id="btnClearScanImages" style="display:none;" onclick="clearScanImages()">ล้างรูปภาพ</button>
+            </div>
+            <div class="scan-images-gallery" id="scanImagesGallery">
+              <div class="scan-empty-gallery-hint">
+                <div class="hint-icon">🖼️</div>
+                <div>ยังไม่ได้เลือกรูปภาพ</div>
+                <small class="text-muted">กรุณาเลือกไฟล์ภาพปฏิทิน หรือคลิก "โหลดตัวอย่างปฏิทิน Orbray 2569"</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom: Results Verification & 12-Month Interactive Mini Preview (Appears after analysis) -->
+        <div class="scan-results-section" id="scanResultsSection" style="display:none;">
+          <div class="scan-results-header">
+            <div class="results-header-left">
+              <span class="results-badge-success">✓ วิเคราะห์ข้อมูลสำเร็จ</span>
+              <h4 style="margin: 4px 0 0 0;">ผลการจัดวันทำงานและวันหยุดประจำปี</h4>
+              <div class="text-muted small">บริษัท: <strong id="scanResCompName">ORBRAY</strong> | ปีปฏิทิน: <strong id="scanResYear">2569 / 2026</strong></div>
+            </div>
+            <div class="results-kpi-pills">
+              <div class="res-kpi-pill kpi-nat">
+                <span class="kpi-dot dot-yellow"></span>
+                <span>นักขัตฤกษ์: <strong id="resCountNat">20</strong> วัน</span>
+              </div>
+              <div class="res-kpi-pill kpi-mem">
+                <span class="kpi-dot dot-purple"></span>
+                <span>หยุดประเพณี: <strong id="resCountMem">1</strong> วัน</span>
+              </div>
+              <div class="res-kpi-pill kpi-spec">
+                <span class="kpi-dot dot-red"></span>
+                <span>ทำงานพิเศษ: <strong id="resCountSpec">1</strong> วัน</span>
+              </div>
+              <div class="res-kpi-pill kpi-sat">
+                <span class="kpi-dot dot-green"></span>
+                <span>เสาร์ทำงาน: <strong id="resCountWorkSat">16</strong> วัน</span>
+              </div>
+              <div class="res-kpi-pill kpi-sat-off">
+                <span class="kpi-dot dot-gray"></span>
+                <span>เสาร์หยุด: <strong id="resCountSatOff">36</strong> วัน</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 12-Month Interactive Mini Grid -->
+          <div class="scan-preview-instruction">
+            <em>* ท่านสามารถคลิกที่วันใดก็ได้ในตารางจำลองด้านล่างเพื่อสลับสถานะก่อนกดยืนยันบันทึก:</em>
+          </div>
+          <div class="scan-mini-calendar-grid" id="scanMiniCalendarGrid"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer scan-modal-footer">
+        <div class="footer-left">
+          <span class="text-muted small" id="scanStatusMsg">พร้อมสำหรับการวิเคราะห์รูปภาพ</span>
+        </div>
+        <div class="footer-right">
+          <button type="button" class="btn btn-secondary" onclick="closeCalendarScanModal()">ปิด</button>
+          <button type="button" class="btn btn-success" id="btnApplyScanResult" disabled onclick="applyAnalyzedCalendarToCompany()">
+            💾 ยืนยันบันทึกและจัดวันลงปฏิทินบริษัท
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Confirmation Modal -->
+  <div class="modal-backdrop" id="successConfirmModal" style="display:none; z-index: 99999;" onclick="handleSuccessBackdropClick(event)">
+    <div class="modal-dialog success-popup-dialog" style="max-width: 360px; text-align: center; border-radius: 8px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+      <div class="modal-body" style="padding: 28px 24px 24px 24px;">
+        <div class="success-popup-icon-wrap">
+          <div class="success-popup-check">✓</div>
+        </div>
+        <h3 id="successPopupTitle" class="success-popup-title">บันทึกสำเร็จ</h3>
+        <p id="successPopupMessage" class="success-popup-message">บันทึกข้อมูลเรียบร้อยแล้ว</p>
+        <div style="margin-top: 22px;">
+          <button type="button" class="btn btn-primary btn-lg" id="successPopupOkBtn" onclick="closeSuccessPopup()" style="min-width: 140px; border-radius: 5px; font-weight: 700; padding: 7px 28px; font-size: 0.9rem;">
+            ตกลง
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phone Simulator Modal (Overlay) -->
+  <div class="simulator-backdrop" id="phoneSimulatorModal" style="display: none;" onclick="handleSimulatorBackdropClick(event)">
+    <!-- Floating Top Control Bar -->
+    <div class="sim-floating-toolbar" onclick="event.stopPropagation()">
+      <div class="sim-toolbar-left">
+        <div class="sim-brand-badge">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="3" ry="3"/>
+            <line x1="12" y1="18" x2="12.01" y2="18"/>
+          </svg>
+          <span>IPHONE SIMULATOR</span>
+        </div>
+
+        <div class="sim-control-group">
+          <label for="simDeviceSelect" class="sim-control-label">รุ่นมือถือ:</label>
+          <select id="simDeviceSelect" class="sim-select" onchange="changeSimulatorDevice(this.value)">
+            <optgroup label="Dynamic Island Series">
+              <option value="iphone16promax">iPhone 16 Pro Max (440 × 956)</option>
+              <option value="iphone15pro" selected>iPhone 15 Pro / 16 (393 × 852)</option>
+              <option value="iphone15promax">iPhone 15 Pro Max / 14 Pro Max (430 × 932)</option>
+            </optgroup>
+            <optgroup label="Slim Notch Series">
+              <option value="iphone14">iPhone 14 / 13 / 12 (390 × 844)</option>
+              <option value="iphone14plus">iPhone 14 Plus / 13 Pro Max (428 × 926)</option>
+              <option value="iphone13mini">iPhone 13 mini / 12 mini (375 × 812)</option>
+            </optgroup>
+            <optgroup label="Classic Notch Series">
+              <option value="iphone11">iPhone 11 / XR (414 × 896)</option>
+              <option value="iphone11pro">iPhone 11 Pro / X (375 × 812)</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+
+      <div class="sim-toolbar-right">
+        <div class="sim-control-group">
+          <label for="simScaleSelect" class="sim-control-label">ซูม/ขนาด:</label>
+          <select id="simScaleSelect" class="sim-select" onchange="changeSimulatorScale(this.value)">
+            <option value="fit" selected>พอดีหน้าจอ (AUTO FIT)</option>
+            <option value="1.0">100%</option>
+            <option value="0.85">85%</option>
+            <option value="0.75">75%</option>
+            <option value="0.65">65%</option>
+            <option value="0.5">50%</option>
+          </select>
+        </div>
+
+        <button type="button" class="sim-toolbar-btn" id="btnSimOrientation" onclick="toggleSimulatorOrientation()" title="สลับแนวตั้ง / แนวนอน (Rotate)">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          <span id="simOrientationText">แนวตั้ง</span>
+        </button>
+
+        <button type="button" class="sim-toolbar-btn" onclick="reloadSimulatorFrame()" title="รีเฟรชหน้าจำลอง (Reload)">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+        </button>
+
+        <button type="button" class="sim-toolbar-btn sim-btn-close" onclick="closePhoneSimulator()" title="ปิดแบบจำลอง (ESC)">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stage Container (Center phone) -->
+    <div class="sim-stage-container" onclick="handleSimulatorBackdropClick(event)">
+      <div class="sim-device-scaler" id="simDeviceScaler">
+        <!-- Hardware Phone Chassis -->
+        <div class="sim-phone-frame" id="simPhoneFrame">
+          <!-- Hardware buttons -->
+          <div class="sim-hw-button sim-btn-silent"></div>
+          <div class="sim-hw-button sim-btn-vol-up"></div>
+          <div class="sim-hw-button sim-btn-vol-down"></div>
+          <div class="sim-hw-button sim-btn-power"></div>
+
+          <!-- Phone Screen Bezel -->
+          <div class="sim-screen-bezel" id="simScreenBezel">
+            <!-- Virtual iOS Status Bar -->
+            <div class="sim-status-bar" id="simStatusBar">
+              <div class="sim-status-time" id="simStatusTime">09:41</div>
+              
+              <!-- Cutout: Dynamic Island or Notch -->
+              <div class="sim-cutout-container" id="simCutoutContainer">
+                <div class="sim-dynamic-island" id="simDynamicIsland">
+                  <div class="sim-lens-dot"></div>
+                  <div class="sim-sensor-dot"></div>
+                </div>
+                <div class="sim-notch" id="simNotch" style="display: none;">
+                  <div class="sim-notch-speaker"></div>
+                  <div class="sim-notch-camera"></div>
+                </div>
+              </div>
+
+              <div class="sim-status-icons">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                  <rect x="2" y="16" width="3" height="6" rx="1"/>
+                  <rect x="7" y="12" width="3" height="10" rx="1"/>
+                  <rect x="12" y="8" width="3" height="14" rx="1"/>
+                  <rect x="17" y="4" width="3" height="18" rx="1"/>
+                </svg>
+                <span class="sim-5g-text">5G</span>
+                <div class="sim-battery-icon">
+                  <div class="sim-battery-body">
+                    <div class="sim-battery-level"></div>
+                  </div>
+                  <div class="sim-battery-tip"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Embedded Web View iframe -->
+            <iframe id="simIframe" class="sim-iframe" src="about:blank" title="Mobile App Simulator"></iframe>
+
+            <!-- Virtual iOS Home Indicator Bar -->
+            <div class="sim-home-bar-area">
+              <div class="sim-home-indicator"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dime / Webull Inspired Mobile Bottom Navigation Bar -->
+  <nav class="mobile-tab-bar no-print" id="mobileTabBar">
+    <button type="button" class="mobile-tab-item active" id="mobileTabMain" onclick="switchView('main')">
+      <div class="mobile-tab-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="2" width="16" height="20" rx="2"/>
+          <line x1="8" y1="6" x2="16" y2="6"/>
+          <line x1="16" y1="14" x2="16" y2="18"/>
+          <path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/>
+          <path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/>
+        </svg>
+      </div>
+      <span class="mobile-tab-label">เงินเดือน</span>
+    </button>
+
+    <button type="button" class="mobile-tab-item" id="mobileTabAttendance" onclick="switchView('attendance')">
+      <div class="mobile-tab-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <span class="mobile-tab-label">ลงเวลา</span>
+    </button>
+
+    <button type="button" class="mobile-tab-item" id="mobileTabCalendar" onclick="toggleCalendarView()">
+      <div class="mobile-tab-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      </div>
+      <span class="mobile-tab-label">ปฏิทิน</span>
+    </button>
+
+    <button type="button" class="mobile-tab-item" id="mobileTabSettings" onclick="openSettingsSalaryModal()">
+      <div class="mobile-tab-icon">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="21" x2="4" y2="14"/>
+          <line x1="4" y1="10" x2="4" y2="3"/>
+          <line x1="12" y1="21" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12" y2="3"/>
+          <line x1="20" y1="21" x2="20" y2="16"/>
+          <line x1="20" y1="12" x2="20" y2="3"/>
+          <line x1="1" y1="14" x2="7" y2="14"/>
+          <line x1="9" y1="8" x2="15" y2="8"/>
+          <line x1="17" y1="16" x2="23" y2="16"/>
+        </svg>
+      </div>
+      <span class="mobile-tab-label">โครงสร้างเงิน</span>
+    </button>
+  </nav>
+
+  <footer class="app-footer no-print">
+    <div class="container text-center">
+      <p>CACULATION SALARY BY JITTRAKAN K.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 /**
  * APP.JS - ระบบคำนวณเงินเดือน & ปฏิทินวันทำงาน
- * CACULATION SALARY
+ * CALSA
  */
 
 // ==========================================================================
@@ -81,7 +81,7 @@ const DEFAULT_ORBRAY_COMPANY = {
   id: 'orbray',
   name: 'ORBRAY',
   code: 'ORBRAY',
-  description: 'บริษัท ออร์เบรย์ (ประเทศไทย) จำกัด (ข้อมูลตั้งต้น)',
+  description: 'Orbray (Thailand) Co., Ltd. (default)',
   isDefault: true,
   createdAt: '2026-01-01',
   calendars: {
@@ -101,13 +101,13 @@ let currentAttendance = []; // รายการลงเวลา 31 วัน
 
 // ข้อมูลพนักงานและข้อมูลคงที่
 var salaryProfile = {
-  companyName: 'CACULATION SALARY',
+  companyName: 'CALSA',
   empCode: '20523',
   empName: 'JITTRAKAN K.',
   department: 'PRODUCTION TECHNOLOGY',
-  empType: 'รายเดือน',
-  periodMonth: 'กันยายน',
-  periodRound: 'งวดจ่ายเงินเดือน',
+  empType: 'Monthly',
+  periodMonth: 'September',
+  periodRound: 'Payroll period',
   payDate: '30/09/2569',
   userName: 'JITTRAKAN K.',
   printDate: '13/09/2569'
@@ -154,10 +154,10 @@ function syncSalaryProfileWithActiveUser() {
   if (typeof getActiveEditingUser === 'function') {
     const u = getActiveEditingUser();
     if (u) {
-      salaryProfile.companyName = (u.companyName || 'CACULATION SALARY').toUpperCase();
+      salaryProfile.companyName = (u.companyName || 'CALSA').toUpperCase();
       salaryProfile.empCode = (u.empCode || (u.id === 'user_admin' ? '20523' : ('EMP-' + (u.pin || '001')))).toUpperCase();
       salaryProfile.empName = u.name;
-      salaryProfile.department = u.department || 'ฝ่ายปฏิบัติการ';
+      salaryProfile.department = u.department || 'Operations';
       salaryProfile.userName = u.role === 'admin' ? 'ADMIN' : u.name;
     }
   }
@@ -610,9 +610,15 @@ function loadAttendanceFromStorage(periodId) {
 // 5. ระบบคำนวณวันและรอบการจ่ายเงินเดือน (Calendar & Periods Generator)
 // ==========================================================================
 const THAI_MONTHS = [
-  'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-  'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
 ];
+
+function toBE(v) {
+  const n = parseInt(v, 10);
+  if (!n) return NaN;
+  return n < 2400 ? n + 543 : n;
+}
 
 const ENGLISH_MONTHS = [
   'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
@@ -634,7 +640,7 @@ function generatePayrollPeriodsForYear(yearCE) {
 
   for (let m = 0; m < 12; m++) {
     const monthNum = m + 1;
-    const monthName = `${THAI_MONTHS[m]} ${yearBE}`;
+    const monthName = `${THAI_MONTHS[m]} ${yearCE}`;
     const periodId = `${yearCE}-${formatDay2Digit(monthNum)}`;
 
     let startYear = yearCE;
@@ -653,8 +659,8 @@ function generatePayrollPeriodsForYear(yearCE) {
     const endDate = `${yearCE}-${formatDay2Digit(monthNum)}-20`;
 
     const lastDay = getLastDayOfMonth(yearCE, m);
-    const payDate = `${formatDay2Digit(lastDay)}/${formatDay2Digit(monthNum)}/${yearBE}`;
-    const displayName = `${endMonthNameEN} ${yearCE} (${endMonthName})`;
+    const payDate = `${formatDay2Digit(lastDay)}/${formatDay2Digit(monthNum)}/${yearCE}`;
+    const displayName = `${endMonthName} ${yearCE}`;
 
     periods.push({
       id: periodId,
@@ -720,21 +726,21 @@ function getOrbrayDayInfo(dateStr) {
 function getDayTypeConfig(type, customName = null) {
   switch (type) {
     case 'NATIONAL_HOLIDAY':
-      return { type, name: customName || 'วันหยุดนักขัตฤกษ์', shortName: 'วันหยุด', isWorkDay: false, badgeClass: 'badge-national', calClass: 'day-national-holiday' };
+      return { type, name: customName || 'Public holiday', shortName: 'Holiday', isWorkDay: false, badgeClass: 'badge-national', calClass: 'day-national-holiday' };
     case 'MEMORIAL_HOLIDAY':
-      return { type, name: customName || 'วันหยุดประเพณีจ่ายเงิน', shortName: 'วันหยุด', isWorkDay: false, badgeClass: 'badge-memorial', calClass: 'day-memorial-holiday' };
+      return { type, name: customName || 'Paid company holiday', shortName: 'Holiday', isWorkDay: false, badgeClass: 'badge-memorial', calClass: 'day-memorial-holiday' };
     case 'ORBRAY_WORKDAY':
-      return { type, name: customName || 'วันทำงานพิเศษ', shortName: 'ทำงานพิเศษ', isWorkDay: true, badgeClass: 'badge-orbray', calClass: 'day-orbray-work' };
+      return { type, name: customName || 'Special workday', shortName: 'Special', isWorkDay: true, badgeClass: 'badge-orbray', calClass: 'day-orbray-work' };
     case 'WORKING_SATURDAY':
-      return { type, name: customName || 'เสาร์ทำงาน', shortName: 'เสาร์ทำ', isWorkDay: true, badgeClass: 'badge-work-sat', calClass: 'day-working-sat' };
+      return { type, name: customName || 'Working Saturday', shortName: 'Work Sat', isWorkDay: true, badgeClass: 'badge-work-sat', calClass: 'day-working-sat' };
     case 'SATURDAY_HOLIDAY':
-      return { type, name: customName || 'เสาร์หยุด', shortName: 'เสาร์หยุด', isWorkDay: false, badgeClass: 'badge-sat-holiday', calClass: 'day-sat-holiday' };
+      return { type, name: customName || 'Saturday off', shortName: 'Sat off', isWorkDay: false, badgeClass: 'badge-sat-holiday', calClass: 'day-sat-holiday' };
     case 'SUNDAY':
-      return { type, name: customName || 'วันอาทิตย์หยุด', shortName: 'อาทิตย์', isWorkDay: false, badgeClass: 'badge-sunday', calClass: 'day-sunday' };
+      return { type, name: customName || 'Sunday', shortName: 'Sunday', isWorkDay: false, badgeClass: 'badge-sunday', calClass: 'day-sunday' };
     case 'BRIDGE_HOLIDAY':
-      return { type, name: customName || 'วันหยุดพิเศษ', shortName: 'หยุดพิเศษ', isWorkDay: false, badgeClass: 'badge-bridge', calClass: 'day-bridge' };
+      return { type, name: customName || 'Bridge holiday', shortName: 'Bridge', isWorkDay: false, badgeClass: 'badge-bridge', calClass: 'day-bridge' };
     default:
-      return { type: 'NORMAL_WORKDAY', name: customName || 'วันทำงานปกติ', shortName: 'วันปกติ', isWorkDay: true, badgeClass: 'badge-workday', calClass: '' };
+      return { type: 'NORMAL_WORKDAY', name: customName || 'Workday', shortName: 'Workday', isWorkDay: true, badgeClass: 'badge-workday', calClass: '' };
   }
 }
 
@@ -821,10 +827,10 @@ function updateRowOT(row) {
 // 7. การสร้างและจัดการตารางเข้า-ออกงาน (Timesheet Table)
 // ==========================================================================
 const LEAVE_TYPES = {
-  ANNUAL: { label: 'ลาพักร้อน', shortLabel: 'ลาพักร้อน', deductDiligence: false, badgeClass: 'badge-leave-annual' },
-  SICK: { label: 'ลาป่วย', shortLabel: 'ลาป่วย', deductDiligence: true, badgeClass: 'badge-leave-deduct' },
-  PERSONAL: { label: 'ลากิจ', shortLabel: 'ลากิจ', deductDiligence: true, badgeClass: 'badge-leave-deduct' },
-  OTHER: { label: 'ลาอื่นๆ', shortLabel: 'ลาอื่นๆ', deductDiligence: true, badgeClass: 'badge-leave-deduct' }
+  ANNUAL: { label: 'Annual leave', shortLabel: 'Annual', deductDiligence: false, badgeClass: 'badge-leave-annual' },
+  SICK: { label: 'Sick leave', shortLabel: 'Sick', deductDiligence: true, badgeClass: 'badge-leave-deduct' },
+  PERSONAL: { label: 'Personal leave', shortLabel: 'Personal', deductDiligence: true, badgeClass: 'badge-leave-deduct' },
+  OTHER: { label: 'Other leave', shortLabel: 'Other', deductDiligence: true, badgeClass: 'badge-leave-deduct' }
 };
 
 function isTargetWorkDayInfo(dayInfo) {
@@ -846,7 +852,7 @@ function buildAttendanceTable() {
   if (!tbody) return;
   tbody.innerHTML = '';
 
-  const thaiDays = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+  const thaiDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const sundayOutOptions = [
     '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00',
@@ -910,12 +916,12 @@ function buildAttendanceTable() {
       leaveSelectHtml = `
         <select class="form-control form-control-sm form-select leave-type-select ${leaveCode ? (leaveCode === 'ANNUAL' ? 'leave-select-annual' : 'leave-select-deduct') : ''}"
           onchange="onAttendanceLeaveTypeChange(${idx}, this.value)"
-          title="เลือกประเภทการลา">
-          <option value="" ${!leaveCode ? 'selected' : ''}>- เลือกการลา -</option>
-          <option value="ANNUAL" ${leaveCode === 'ANNUAL' ? 'selected' : ''}>ลาพักร้อน</option>
-          <option value="SICK" ${leaveCode === 'SICK' ? 'selected' : ''}>ลาป่วย</option>
-          <option value="PERSONAL" ${leaveCode === 'PERSONAL' ? 'selected' : ''}>ลากิจ</option>
-          <option value="OTHER" ${leaveCode === 'OTHER' ? 'selected' : ''}>ลาอื่นๆ</option>
+          title="Select leave type">
+          <option value="" ${!leaveCode ? 'selected' : ''}>Leave type…</option>
+          <option value="ANNUAL" ${leaveCode === 'ANNUAL' ? 'selected' : ''}>Annual</option>
+          <option value="SICK" ${leaveCode === 'SICK' ? 'selected' : ''}>Sick</option>
+          <option value="PERSONAL" ${leaveCode === 'PERSONAL' ? 'selected' : ''}>Personal</option>
+          <option value="OTHER" ${leaveCode === 'OTHER' ? 'selected' : ''}>Other</option>
         </select>
       `;
     }
@@ -927,7 +933,7 @@ function buildAttendanceTable() {
     tr.innerHTML = `
       <!-- Col 0: Mobile Only Edit Icon Button -->
       <td class="col-att-edit mobile-only-table-cell text-center">
-        <button type="button" class="btn-att-edit-mini" onclick="openAttendanceEditModal(${idx})" title="แก้ไขข้อมูล">
+        <button type="button" class="btn-att-edit-mini" onclick="openAttendanceEditModal(${idx})" title="Edit">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -996,14 +1002,14 @@ function buildAttendanceTable() {
       <!-- Col 10: มาทำงาน / การลา (Desktop Only Checkbox + Leave Select) -->
       <td class="col-att-workday desktop-only-table-cell text-center">
         <div class="workday-cell-wrap">
-          <input type="checkbox" ${row.workDay ? 'checked' : ''} onchange="onAttendanceToggleWorkDay(${idx}, this.checked)" title="ติ๊กเมื่อมาทำงาน">
+          <input type="checkbox" ${row.workDay ? 'checked' : ''} onchange="onAttendanceToggleWorkDay(${idx}, this.checked)" title="Tick if worked">
           ${leaveSelectHtml}
         </div>
       </td>
 
       <!-- Col 11: วันที่มา (Desktop Only) -->
       <td class="col-att-come desktop-only-table-cell text-center">
-        <span class="${row.come ? 'text-success font-weight-bold' : (leaveObj ? 'text-primary font-weight-bold' : 'text-muted')}" title="${leaveObj ? `ใช้สิทธิ์${leaveObj.label}` : ''}">${row.come ? '1' : '0'}</span>
+        <span class="${row.come ? 'text-success font-weight-bold' : (leaveObj ? 'text-primary font-weight-bold' : 'text-muted')}" title="${leaveObj ? `${leaveObj.label}` : ''}">${row.come ? '1' : '0'}</span>
       </td>
 
       <!-- Col 12: วันทำ OT (Desktop Only) -->
@@ -1178,7 +1184,7 @@ function openAttendanceEditModal(idx) {
   currentAttEditIndex = idx;
   const row = currentAttendance[idx];
   const dayInfo = getOrbrayDayInfo(row.date);
-  const thaiDaysLong = ['วันอาทิตย์', 'วันจันทร์', 'วันอังคาร', 'วันพุธ', 'วันพฤหัสบดี', 'วันศุกร์', 'วันเสาร์'];
+  const thaiDaysLong = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const d = new Date(row.date);
   const dayLong = thaiDaysLong[d.getDay()];
 
@@ -1204,7 +1210,7 @@ function openAttendanceEditModal(idx) {
 
   const hintEl = document.getElementById('attEditWorkStatusHint');
   if (hintEl) {
-    hintEl.innerText = row.workDay ? 'มาทำงาน (บันทึกเวลาทำงาน)' : 'ไม่ได้มาทำงานในวันนี้';
+    hintEl.innerText = row.workDay ? 'Worked — record clock-in / clock-out' : 'Did not work today';
   }
 
   const normalInOptions = [
@@ -1235,7 +1241,7 @@ function openAttendanceEditModal(idx) {
 
   const inSelectEl = document.getElementById('attEditInTimeSelect');
   if (inSelectEl) {
-    inSelectEl.innerHTML = `<option value="">- ไม่ระบุ -</option>`;
+    inSelectEl.innerHTML = `<option value="">— None —</option>`;
     normalInOptions.forEach(opt => {
       const isSelected = (row.inTime === opt || (!row.inTime && row.workDay && opt === '08:00'));
       inSelectEl.innerHTML += `<option value="${opt}" ${isSelected ? 'selected' : ''}>${opt}</option>`;
@@ -1245,7 +1251,7 @@ function openAttendanceEditModal(idx) {
 
   const selectEl = document.getElementById('attEditOutTimeSelect');
   if (selectEl) {
-    selectEl.innerHTML = `<option value="">- ไม่ระบุ -</option>`;
+    selectEl.innerHTML = `<option value="">— None —</option>`;
     availableOptions.forEach(opt => {
       const isSelected = (row.outTime === opt || (opt === '18:20' && row.outTime === '18:00'));
       selectEl.innerHTML += `<option value="${opt}" ${isSelected ? 'selected' : ''}>${opt}</option>`;
@@ -1280,13 +1286,13 @@ function updateAttEditModalLeaveHint(leaveVal) {
   const hintEl = document.getElementById('attEditLeaveDiligenceHint');
   if (!hintEl) return;
   if (leaveVal === 'ANNUAL') {
-    hintEl.innerText = '✔ ใช้สิทธิ์ลาพักร้อน: ได้รับฐานเงินเดือนปกติ และไม่หักเบี้ยขยัน';
+    hintEl.innerText = 'Annual leave: base salary paid, diligence allowance kept.';
     hintEl.style.color = 'var(--success-color, #16a34a)';
   } else if (leaveVal && LEAVE_TYPES[leaveVal]) {
-    hintEl.innerText = `⚠ ใช้สิทธิ์${LEAVE_TYPES[leaveVal].label}: ได้รับฐานเงินเดือนปกติ แต่จะถูกหักเบี้ยขยัน`;
+    hintEl.innerText = `${LEAVE_TYPES[leaveVal].label}: base salary paid, but diligence allowance is deducted.`;
     hintEl.style.color = 'var(--danger-color, #dc2626)';
   } else {
-    hintEl.innerText = '* หากไม่มาทำงานและไม่ได้เลือก "ลาพักร้อน" จะทำให้ถูกหักเบี้ยขยัน';
+    hintEl.innerText = '* Absence without annual leave deducts the diligence allowance.';
     hintEl.style.color = 'var(--text-muted)';
   }
 }
@@ -1316,7 +1322,7 @@ function onAttEditModalWorkDayToggle(isChecked) {
     }
   }
   if (hintEl) {
-    hintEl.innerText = isChecked ? 'มาทำงาน (บันทึกเวลาทำงาน)' : 'ไม่ได้มาทำงานในวันนี้';
+    hintEl.innerText = isChecked ? 'Worked — record clock-in / clock-out' : 'Did not work today';
   }
 
   if (leaveGroupEl) {
@@ -1354,10 +1360,10 @@ function updateAttEditModalPreview() {
   const otHolEl = document.getElementById('attEditPreviewOTHol');
   const sumEl = document.getElementById('attEditTotalOTSum');
 
-  if (ot15El) ot15El.innerText = `${(tempRow.ot || 0).toFixed(1)} ชม.`;
-  if (holEl) holEl.innerText = `${(tempRow.hol || 0).toFixed(1)} ชม.`;
-  if (otHolEl) otHolEl.innerText = `${(tempRow.otHol || 0).toFixed(1)} ชม.`;
-  if (sumEl) sumEl.innerText = `${totalOT.toFixed(1)} ชม.`;
+  if (ot15El) ot15El.innerText = `${(tempRow.ot || 0).toFixed(1)} h`;
+  if (holEl) holEl.innerText = `${(tempRow.hol || 0).toFixed(1)} h`;
+  if (otHolEl) otHolEl.innerText = `${(tempRow.otHol || 0).toFixed(1)} h`;
+  if (sumEl) sumEl.innerText = `${totalOT.toFixed(1)} h`;
 }
 
 function saveAttendanceEditModal() {
@@ -1382,7 +1388,7 @@ function saveAttendanceEditModal() {
   closeAttendanceEditModal();
 
   if (typeof showToast === 'function') {
-    showToast(`บันทึกเวลาทำงานวันที่ ${row.date} สำเร็จ`, 'success');
+    showToast(`Saved attendance for ${row.date}`, 'success');
   }
 }
 
@@ -1419,7 +1425,7 @@ function autoFillNormalWorkdays(shouldSave = true) {
 }
 
 function clearAttendanceTable() {
-  if (!confirm('คุณต้องการล้างข้อมูลเวลาทั้งหมดในตารางใช่หรือไม่?')) return;
+  if (!confirm('Clear all times in this period?')) return;
   currentAttendance.forEach(row => {
     row.workDay = 0;
     row.come = 0;
@@ -1474,12 +1480,12 @@ function saveCurrentAttendance() {
 
 function loadAttendanceFromExcel() {
   currentAttendance = JSON.parse(JSON.stringify(EXCEL_SAMPLE_ATTENDANCE));
-  salaryProfile.periodMonth = 'กันยายน';
+  salaryProfile.periodMonth = 'September';
   salaryProfile.payDate = '30/09/2569';
   buildAttendanceTable();
   recalculateSalary();
   saveCurrentAttendance();
-  alert('โหลดข้อมูลลงเวลา 31 วันจากไฟล์ Excel DATA SALARY 210826-200926.xlsx สำเร็จแล้ว!');
+  alert('Loaded 31 days of attendance from DATA SALARY 210826-200926.xlsx.');
 }
 
 // ==========================================================================
@@ -1561,10 +1567,10 @@ function recalculateSalary() {
   setElText('quickTotalOTDays', F2_otDays);
 
   // อัปเดตแถบ KPI บนหน้าบันทึกเวลาออกงาน (Attendance Page)
-  setElText('attCardTargetDays', `${B2_targetDays} วัน`);
-  setElText('attCardCameDays', `${D2_cameDays} วัน`);
-  setElText('attCardOTHours', `${Number(totalOTHours || 0).toFixed(1)} ชม.`);
-  setElText('attCardNetPay', `${formatCurrency(netPay)} บาท`);
+  setElText('attCardTargetDays', `${B2_targetDays} days`);
+  setElText('attCardCameDays', `${D2_cameDays} days`);
+  setElText('attCardOTHours', `${Number(totalOTHours || 0).toFixed(1)} h`);
+  setElText('attCardNetPay', `฿${formatCurrency(netPay)}`);
 
   // อัปเดตรายการคำนวณเงินเดือนในการ์ด (รูปที่ 2)
   setElText('calcBaseSalary', formatCurrency(baseSalary));
@@ -1585,15 +1591,15 @@ function recalculateSalary() {
   if (diligenceStatusEl) {
     if (totals.isDiligenceEligible) {
       diligenceStatusEl.innerText = totals.totalAnnualLeaveDays > 0
-        ? `ครบวันทำงาน (ลาพักร้อน ${totals.totalAnnualLeaveDays} วัน)`
-        : 'ครบวันทำงาน';
+        ? `Full attendance (${totals.totalAnnualLeaveDays} days annual leave)`
+        : 'Full attendance';
       diligenceStatusEl.className = 'badge-status-ok';
     } else if (totals.totalOtherLeaveDays > 0) {
       const uniqueLeaves = [...new Set(totals.leaveDeductionReasons)].join('/');
-      diligenceStatusEl.innerText = `หักเบี้ยขยัน (${uniqueLeaves} ${totals.totalOtherLeaveDays} วัน)`;
+      diligenceStatusEl.innerText = `Diligence deducted (${uniqueLeaves} ${totals.totalOtherLeaveDays} days)`;
       diligenceStatusEl.className = 'day-badge badge-sunday';
     } else {
-      diligenceStatusEl.innerText = 'ขาด/ไม่ครบวันทำงาน';
+      diligenceStatusEl.innerText = 'Incomplete attendance';
       diligenceStatusEl.className = 'day-badge badge-sunday';
     }
   }
@@ -1601,12 +1607,12 @@ function recalculateSalary() {
   if (lblDiligenceSubtitle) {
     const rateTxt = formatCurrency(currentSalaryConfig.diligenceFullAmount);
     if (totals.isDiligenceEligible) {
-      lblDiligenceSubtitle.innerHTML = `มาครบวันทำงานตามปฏิทิน (อัตรา <span id="lblRateDiligence">${rateTxt}</span> บ.)`;
+      lblDiligenceSubtitle.innerHTML = `Full calendar attendance (rate ฿<span id="lblRateDiligence">${rateTxt}</span>)`;
     } else if (totals.totalOtherLeaveDays > 0) {
       const uniqueLeaves = [...new Set(totals.leaveDeductionReasons)].join(', ');
-      lblDiligenceSubtitle.innerHTML = `<span class="text-danger font-weight-bold">หักเบี้ยขยันเนื่องจากใช้สิทธิ์${uniqueLeaves}</span> (อัตรา <span id="lblRateDiligence">${rateTxt}</span> บ.)`;
+      lblDiligenceSubtitle.innerHTML = `<span class="text-danger font-weight-bold">Deducted due to ${uniqueLeaves}</span> (rate ฿<span id="lblRateDiligence">${rateTxt}</span>)`;
     } else {
-      lblDiligenceSubtitle.innerHTML = `มาครบวันทำงานตามปฏิทิน (อัตรา <span id="lblRateDiligence">${rateTxt}</span> บ.)`;
+      lblDiligenceSubtitle.innerHTML = `Full calendar attendance (rate ฿<span id="lblRateDiligence">${rateTxt}</span>)`;
     }
   }
   setElText('calcDiligenceTotal', formatCurrency(M2_diligenceAllowance));
@@ -1651,14 +1657,14 @@ function recalculateSalary() {
   setElText('insCameDays', D2_cameDays);
   setElText('insTargetDays', B2_targetDays);
   const missingDays = Math.max(0, B2_targetDays - paidDays);
-  let insStatusText = `ขาดอีก ${missingDays} วัน`;
+  let insStatusText = `${missingDays} days short`;
   if (totals.isDiligenceEligible) {
     insStatusText = totals.totalAnnualLeaveDays > 0
-      ? `ลาพักร้อน ${totals.totalAnnualLeaveDays} วัน • ได้เบี้ยขยัน`
-      : 'ครบวันทำงาน • ได้เบี้ยขยัน';
+      ? `${totals.totalAnnualLeaveDays} days annual leave · diligence earned`
+      : 'Full attendance · diligence earned';
   } else if (totals.totalOtherLeaveDays > 0) {
     const uniqueLeaves = [...new Set(totals.leaveDeductionReasons)].join('/');
-    insStatusText = `${uniqueLeaves} ${totals.totalOtherLeaveDays} วัน • หักเบี้ยขยัน`;
+    insStatusText = `${uniqueLeaves} ${totals.totalOtherLeaveDays} days · diligence deducted`;
   }
   setElText('insAttStatus', insStatusText);
 
@@ -1672,7 +1678,7 @@ function recalculateSalary() {
   setElText('netBoxDeductVal', totalDeductions > 0 ? formatCurrency(totalDeductions) : '0.00');
   setElText('netBoxNetVal', formatCurrency(netPay));
   if (currentPeriod) {
-    setElText('netBoxPeriod', `${currentPeriod.endMonthName} ${currentPeriod.yearBE}`);
+    setElText('netBoxPeriod', `${currentPeriod.endMonthName} ${currentPeriod.yearCE}`);
     setElText('netBoxPayDate', currentPeriod.payDate || salaryProfile.payDate || '-');
   }
 
@@ -1696,25 +1702,25 @@ function recalculateSalary() {
 
 function updateRateLabelsOnCards() {
   setElText('lblRateDiligence', formatCurrency(currentSalaryConfig.diligenceFullAmount));
-  setElText('lblFoodTitle', `ค่าอาหาร (${currentSalaryConfig.foodPerDay} บ./วัน)`);
+  setElText('lblFoodTitle', `Meal allowance (฿${currentSalaryConfig.foodPerDay} / day)`);
   setElText('lblFoodPerDay', currentSalaryConfig.foodPerDay);
-  setElText('lblOTMealTitle', `อาหารโอที (${currentSalaryConfig.otMealPerDay} บ./วัน)`);
+  setElText('lblOTMealTitle', `OT meal (฿${currentSalaryConfig.otMealPerDay} / day)`);
   setElText('lblOTMealPerDay', currentSalaryConfig.otMealPerDay);
   setElText('calcTravelTotal', formatCurrency(currentSalaryConfig.transportationAllowance));
   
   const baseFormatted = formatCurrency(currentSalaryConfig.baseSalary);
 
-  setElText('lblOT15Title', `ค่าล่วงเวลา OT ${currentSalaryConfig.ot15Multiplier} เท่า (วันปกติ)`);
+  setElText('lblOT15Title', `Overtime ${currentSalaryConfig.ot15Multiplier}× (workday)`);
   setElText('lblOT15Mult', currentSalaryConfig.ot15Multiplier);
   setElText('lblOT15Base', baseFormatted);
   setElText('lblOT15Days', '30');
 
-  setElText('lblOT1Title', `ค่าล่วงเวลา OT ${currentSalaryConfig.ot1Multiplier} เท่า (วันหยุด 8 ชม.)`);
+  setElText('lblOT1Title', `Holiday ${currentSalaryConfig.ot1Multiplier}× (8 h on holiday)`);
   setElText('lblOT1Mult', currentSalaryConfig.ot1Multiplier);
   setElText('lblOT1Base', baseFormatted);
   setElText('lblOT1Days', '30');
 
-  setElText('lblOT3Title', `ค่าล่วงเวลา OT ${currentSalaryConfig.ot3Multiplier} เท่า (วันหยุดหลัง 17:00)`);
+  setElText('lblOT3Title', `Holiday OT ${currentSalaryConfig.ot3Multiplier}× (after 17:00)`);
   setElText('lblOT3Mult', currentSalaryConfig.ot3Multiplier);
   setElText('lblOT3Base', baseFormatted);
   setElText('lblOT3Days', '30');
@@ -1740,7 +1746,8 @@ function updateCardPeriodBadge() {
 
   if (subtitleEl) {
     const daysCount = (currentAttendance && currentAttendance.length) ? currentAttendance.length : 31;
-    subtitleEl.innerText = `คำนวณจากยอดลงเวลา ${daysCount} วัน (${currentPeriod.startDate} - ${currentPeriod.endDate}) ${hasOverride ? '• โครงสร้างค่าเงินเฉพาะงวดนี้' : '• โครงสร้างค่าเงินมาตรฐาน'}`;
+    const _fmtD = (iso, withYear) => { const d = new Date(iso + 'T00:00:00'); if (isNaN(d)) return iso; const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]; return `${d.getDate()} ${m}` + (withYear ? ` ${d.getFullYear()}` : ''); };
+    subtitleEl.innerText = `${_fmtD(currentPeriod.startDate)} – ${_fmtD(currentPeriod.endDate, true)} · ${daysCount} days · ${hasOverride ? 'Custom rates' : 'Standard rates'}`;
   }
 }
 
@@ -1771,7 +1778,7 @@ function renderOrbrayCalendarGrid() {
   const yearCE = cal.yearCE;
   const yearBE = cal.yearBE;
 
-  setElText('calHeaderYear', `${yearBE} / ${yearCE}`);
+  setElText('calHeaderYear', `${yearCE}`);
 
   const activeComp = allCompanies[activeCompanyId] || allCompanies['orbray'];
   if (activeComp) {
@@ -1804,10 +1811,10 @@ function renderOrbrayCalendarGrid() {
       <div class="cal-month-header">
         <div>
           <h3>${m + 1}. ${THAI_MONTHS[m]}</h3>
-          <span class="th-name">${yearBE}</span>
+          <span class="th-name">${yearCE}</span>
         </div>
-        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectPeriodMonth('${periodId}')" title="เลือกงวดนี้">
-          คำนวณงวดนี้
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="selectPeriodMonth('${periodId}')" title="Open this period">
+          Open period
         </button>
       </div>
       <table class="cal-mini-table">
@@ -1864,7 +1871,7 @@ function updateYearSelectDropdown() {
     const opt = document.createElement('option');
     opt.value = y;
     const cal = allCalendars[y];
-    opt.innerText = `ค.ศ. ${cal.yearCE} (${cal.yearBE})`;
+    opt.innerText = `Year ${cal.yearCE}`;
     if (y === activeYearCE) opt.selected = true;
     select.appendChild(opt);
   });
@@ -1962,7 +1969,7 @@ function onPayrollPeriodSelectChange(isUserAction = true) {
 
   const periodSubtitle = document.getElementById('timesheetPeriodSubtitle');
   if (periodSubtitle) {
-    periodSubtitle.innerText = `${found.displayName} (ตัดรอบ ${found.startDate} ถึง ${found.endDate})`;
+    periodSubtitle.innerText = `${found.displayName} · cut-off ${found.startDate} to ${found.endDate}`;
   }
 
   const btnExcel = document.getElementById('btnLoadExcelSample');
@@ -2005,7 +2012,7 @@ function selectPeriodMonth(periodId) {
   const calSection = document.getElementById('view-calendar');
   const btnToggle = document.getElementById('btnToggleCalendar');
   if (calSection) calSection.style.display = 'none';
-  if (btnToggle) btnToggle.innerText = '📅 ปฏิทินวันทำงาน';
+  if (btnToggle) btnToggle.innerText = 'Work calendar';
   switchView('main');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -2014,7 +2021,7 @@ function selectPeriodMonth(periodId) {
 // 10. ระบบเพิ่มปีปฏิทินใหม่ (Add Year Modal)
 // ==========================================================================
 function openAddYearModal() {
-  const nextBE = activeYearCE + 543 + 1;
+  const nextBE = activeYearCE + 1;
   const inpBE = document.getElementById('inpNewYearBE');
   if (inpBE) inpBE.value = nextBE;
   document.getElementById('addYearModal').style.display = 'flex';
@@ -2026,15 +2033,15 @@ function closeAddYearModal() {
 
 function confirmAddNewYear() {
   const inpBE = document.getElementById('inpNewYearBE');
-  const yearBE = parseInt(inpBE.value, 10);
+  const yearBE = toBE(inpBE.value);
   if (!yearBE || yearBE < 2400 || yearBE > 3000) {
-    alert('กรุณาระบุปี พ.ศ. ให้ถูกต้อง');
+    alert('Please enter a valid year (e.g. 2027).');
     return;
   }
   const yearCE = yearBE - 543;
 
   if (allCalendars[yearCE]) {
-    alert(`ปี พ.ศ. ${yearBE} (${yearCE}) มีอยู่ในระบบแล้ว`);
+    alert(`Year ${yearCE} already exists.`);
     activeYearCE = yearCE;
     updateYearSelectDropdown();
     onAppYearChange();
@@ -2083,19 +2090,19 @@ function confirmAddNewYear() {
   onAppYearChange();
   closeAddYearModal();
 
-  showSuccessPopup('บันทึกสำเร็จ', `เพิ่มปีปฏิทิน พ.ศ. ${yearBE} (${yearCE}) เรียบร้อยแล้ว`);
-  showToastNotification(`✅ เพิ่มปีปฏิทิน พ.ศ. ${yearBE} (${yearCE}) เรียบร้อยแล้ว!`);
+  showSuccessPopup('Saved', `Calendar year ${yearCE} has been added.`);
+  showToastNotification(`Calendar year ${yearCE} added`);
 }
 
 function deleteCurrentYear() {
   const years = Object.keys(allCalendars);
   if (years.length <= 1) {
-    alert('ไม่สามารถลบปีปฏิทินได้ เนื่องจากต้องมีอย่างน้อย 1 ปีในระบบ');
+    alert('Cannot delete: at least one calendar year is required.');
     return;
   }
 
   const cal = allCalendars[activeYearCE];
-  if (!confirm(`คุณต้องการลบปฏิทินปี พ.ศ. ${cal.yearBE} (${cal.yearCE}) ใช่หรือไม่?`)) return;
+  if (!confirm(`Delete the ${cal.yearCE} calendar?`)) return;
 
   delete allCalendars[activeYearCE];
   activeYearCE = Object.keys(allCalendars).map(Number)[0];
@@ -2114,7 +2121,7 @@ function openEditDayModal(dateStr) {
 
   const dayInfo = getOrbrayDayInfo(dateStr);
   const d = new Date(dateStr);
-  const thaiDays = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+  const thaiDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   document.getElementById('modalTargetDateStr').value = dateStr;
   document.getElementById('modalDayDateDisplay').innerText = `${dateStr} (${thaiDays[d.getDay()]})`;
@@ -2126,7 +2133,7 @@ function openEditDayModal(dateStr) {
   const cal = allCalendars[activeYearCE] || allCalendars['2026'];
   const override = cal.customDayOverrides ? cal.customDayOverrides[dateStr] : null;
 
-  nameInput.value = override ? (override.name || '') : (dayInfo.name !== 'วันทำงานปกติ' ? dayInfo.name : '');
+  nameInput.value = override ? (override.name || '') : (dayInfo.type !== 'NORMAL_WORKDAY' ? dayInfo.name : '');
   onModalDayTypeSelectChange();
 
   modal.style.display = 'flex';
@@ -2176,8 +2183,8 @@ function saveDayStatusFromModal() {
   }
 
   closeEditDayModal();
-  showSuccessPopup('บันทึกสำเร็จ', 'บันทึกสถานะวันทำงานเรียบร้อยแล้ว');
-  showToastNotification('✅ บันทึกสถานะวันทำงานเรียบร้อยแล้ว');
+  showSuccessPopup('Saved', 'Day status has been updated.');
+  showToastNotification('Day status updated');
 }
 
 // ==========================================================================
@@ -2216,13 +2223,13 @@ function renderCompanyDropdown() {
     // เมนูเพิ่มบริษัทใหม่
     const optAdd = document.createElement('option');
     optAdd.value = '__ADD_COMPANY__';
-    optAdd.innerText = '➕ เพิ่มบริษัทใหม่...';
+    optAdd.innerText = '+ Add company…';
     sel.appendChild(optAdd);
 
     // เมนูจัดการรายชื่อบริษัท
     const optManage = document.createElement('option');
     optManage.value = '__MANAGE_COMPANIES__';
-    optManage.innerText = '⚙️ จัดการบริษัท...';
+    optManage.innerText = 'Manage companies…';
     sel.appendChild(optManage);
   });
 
@@ -2274,7 +2281,7 @@ function switchActiveCompany(companyId) {
   recalculateAttendanceTotals();
   recalculateSalary();
 
-  showToastNotification(`🏢 สลับไปแสดงข้อมูลของบริษัท ${comp.name} (${activeYearCE + 543} / ${activeYearCE}) เรียบร้อยแล้ว`);
+  showToastNotification(`Switched to ${comp.name} (${activeYearCE})`);
 }
 
 function openAddCompanyModal() {
@@ -2293,7 +2300,7 @@ function openAddCompanyModal() {
   if (nameInput) nameInput.value = '';
   if (codeInput) codeInput.value = '';
   if (descInput) descInput.value = '';
-  if (yearBEInput) yearBEInput.value = (activeYearCE + 543).toString();
+  if (yearBEInput) yearBEInput.value = activeYearCE.toString();
   if (satPreset) satPreset.value = 'ALL_OFF';
   if (natHolsCheck) natHolsCheck.checked = true;
   if (memHolsInput) memHolsInput.value = '';
@@ -2313,9 +2320,9 @@ function updateCompNewYearCEPreview() {
   const inpBE = document.getElementById('compNewYearBE');
   const preview = document.getElementById('compNewYearCEPreview');
   if (!inpBE || !preview) return;
-  const val = parseInt(inpBE.value, 10);
+  const val = toBE(inpBE.value);
   if (val && val >= 2400 && val <= 3000) {
-    preview.innerText = (val - 543).toString();
+    preview.innerText = val.toString();
   } else {
     preview.innerText = '-';
   }
@@ -2333,14 +2340,14 @@ function confirmAddNewCompany() {
 
   const name = nameInput ? nameInput.value.trim() : '';
   if (!name) {
-    alert('กรุณาระบุชื่อบริษัท');
+    alert('Please enter a company name.');
     nameInput?.focus();
     return;
   }
 
-  const yearBE = parseInt(yearBEInput?.value, 10);
+  const yearBE = toBE(yearBEInput?.value);
   if (!yearBE || yearBE < 2400 || yearBE > 3000) {
-    alert('กรุณาระบุปี พ.ศ. ให้ถูกต้อง (เช่น 2569)');
+    alert('Please enter a valid year (e.g. 2026).');
     yearBEInput?.focus();
     return;
   }
@@ -2349,7 +2356,7 @@ function confirmAddNewCompany() {
   // ตรวจสอบชื่อซ้ำ
   const existing = Object.values(allCompanies).find(c => c.name.toLowerCase() === name.toLowerCase());
   if (existing) {
-    alert(`มีบริษัทชื่อ "${name}" อยู่ในระบบแล้ว กรุณาใช้ชื่ออื่น`);
+    alert(`A company named "${name}" already exists. Please use another name.`);
     nameInput?.focus();
     return;
   }
@@ -2449,8 +2456,8 @@ function confirmAddNewCompany() {
   switchActiveCompany(newId);
 
   showSuccessPopup(
-    'เพิ่มบริษัทสำเร็จ',
-    `บันทึกข้อมูลบริษัท "${name}" พร้อมปฏิทินวันทำงานปี ${yearBE} (${yearCE}) เรียบร้อยแล้ว ระบบได้เปิดแสดงข้อมูลของบริษัทนี้ให้ท่านทันที`
+    'Company added',
+    `"${name}" was created with a ${yearCE} work calendar and is now active.`
   );
 }
 
@@ -2480,19 +2487,19 @@ function renderManageCompaniesTable() {
     tr.className = 'manage-comp-row';
     const isActive = comp.id === activeCompanyId;
     const yearsList = Object.keys(comp.calendars || {}).map(Number).sort((a, b) => a - b);
-    const yearsStr = yearsList.map(y => `${y + 543} (${y})`).join(', ') || '-';
+    const yearsStr = yearsList.join(', ') || '-';
 
     tr.innerHTML = `
       <td class="col-comp-info">
         <div class="comp-title-line">
           <div class="comp-title-left">
             <span class="comp-title-text">${comp.name}</span>
-            ${comp.isDefault ? '<span class="badge-default-pill">บริษัทหลัก</span>' : ''}
+            ${comp.isDefault ? '<span class="badge-default-pill">Default</span>' : ''}
           </div>
           <div class="mobile-only-inline comp-status-mobile">
             ${isActive 
-              ? '<span class="badge-active-comp">✓ กำลังแสดงผล</span>' 
-              : '<span class="text-muted small">ไม่ได้เลือก</span>'}
+              ? '<span class="badge-active-comp">Active</span>' 
+              : '<span class="text-muted small">Inactive</span>'}
           </div>
         </div>
         ${comp.description ? `<div class="comp-desc text-muted small">${comp.description}</div>` : ''}
@@ -2502,7 +2509,7 @@ function renderManageCompaniesTable() {
               <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
               <line x1="7" y1="7" x2="7.01" y2="7"></line>
             </svg>
-            <span class="comp-chip-label">รหัส:</span>
+            <span class="comp-chip-label">Code:</span>
             <strong class="comp-chip-val font-mono">${comp.code || '-'}</strong>
           </span>
           <span class="comp-chip-year">
@@ -2512,7 +2519,7 @@ function renderManageCompaniesTable() {
               <line x1="8" y1="2" x2="8" y2="6"></line>
               <line x1="3" y1="10" x2="21" y2="10"></line>
             </svg>
-            <span class="comp-chip-label">ปีปฏิทิน:</span>
+            <span class="comp-chip-label">Years:</span>
             <strong class="comp-chip-val">${yearsStr}</strong>
           </span>
         </div>
@@ -2525,17 +2532,17 @@ function renderManageCompaniesTable() {
       </td>
       <td class="col-comp-status desktop-only-table-cell">
         ${isActive 
-          ? '<span class="badge-active-comp">✓ กำลังแสดงผล</span>' 
-          : '<span class="text-muted small">ไม่ได้เลือก</span>'}
+          ? '<span class="badge-active-comp">Active</span>' 
+          : '<span class="text-muted small">Inactive</span>'}
       </td>
       <td class="col-comp-actions">
         ${!isActive 
-          ? `<button type="button" class="btn btn-sm btn-outline-primary" onclick="closeManageCompaniesModal(); switchActiveCompany('${comp.id}');" style="margin-right: 4px;">เลือกแสดง</button>`
+          ? `<button type="button" class="btn btn-sm btn-outline-primary" onclick="closeManageCompaniesModal(); switchActiveCompany('${comp.id}');" style="margin-right: 4px;">Activate</button>`
           : ''}
-        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openEditCompanyModal('${comp.id}')" style="margin-right: 4px;">แก้ไข</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openEditCompanyModal('${comp.id}')" style="margin-right: 4px;">Edit</button>
         ${!comp.isDefault 
-          ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteCompany('${comp.id}')">ลบ</button>`
-          : '<button type="button" class="btn btn-sm btn-outline-secondary" disabled title="บริษัทเริ่มต้น ไม่สามารถลบได้">ลบ</button>'}
+          ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteCompany('${comp.id}')">Delete</button>`
+          : '<button type="button" class="btn btn-sm btn-outline-secondary" disabled title="The default company cannot be deleted">Delete</button>'}
       </td>
     `;
     tbody.appendChild(tr);
@@ -2573,7 +2580,7 @@ function saveEditCompany() {
 
   const name = nameInput ? nameInput.value.trim() : '';
   if (!name) {
-    alert('กรุณาระบุชื่อบริษัท');
+    alert('Please enter a company name.');
     nameInput?.focus();
     return;
   }
@@ -2592,7 +2599,7 @@ function saveEditCompany() {
   renderManageCompaniesTable();
   renderOrbrayCalendarGrid();
 
-  showToastNotification(`✅ บันทึกการแก้ไขข้อมูลบริษัท ${comp.name} เรียบร้อยแล้ว`);
+  showToastNotification(`${comp.name} updated`);
 }
 
 function deleteCompany(companyId) {
@@ -2600,16 +2607,16 @@ function deleteCompany(companyId) {
   if (!comp) return;
 
   if (comp.isDefault || comp.id === 'orbray') {
-    alert('ไม่สามารถลบบริษัทเริ่มต้น (ORBRAY) ได้');
+    alert('The default company (ORBRAY) cannot be deleted.');
     return;
   }
 
   if (Object.keys(allCompanies).length <= 1) {
-    alert('ระบบจำเป็นต้องมีบริษัทอย่างน้อย 1 แห่ง');
+    alert('At least one company is required.');
     return;
   }
 
-  if (!confirm(`คุณต้องการลบข้อมูลบริษัท "${comp.name}" พร้อมปฏิทินและข้อมูลที่เกี่ยวข้องทั้งหมดหรือไม่?`)) {
+  if (!confirm(`Delete "${comp.name}" and all of its calendars and data?`)) {
     return;
   }
 
@@ -2628,7 +2635,7 @@ function deleteCompany(companyId) {
     renderManageCompaniesTable();
   }
 
-  showToastNotification(`🗑️ ลบข้อมูลบริษัท ${comp.name} เรียบร้อยแล้ว`);
+  showToastNotification(`${comp.name} deleted`);
 }
 
 // ==========================================================================
@@ -2652,8 +2659,8 @@ function openCalendarScanModal(targetCompanyId) {
   // กำหนดปีเริ่มต้นให้ตรงกับปีที่กำลังทำงาน
   const beInput = document.getElementById('scanTargetYearBE');
   const ceInput = document.getElementById('scanTargetYearCE');
-  if (beInput) beInput.value = (activeYearCE + 543).toString();
-  if (ceInput) ceInput.value = activeYearCE.toString();
+  if (beInput) beInput.value = activeYearCE.toString();
+  if (ceInput) ceInput.value = (activeYearCE + 543).toString();
 
   // โหลด Gemini API Key จาก Storage
   const apiKeyInp = document.getElementById('scanGeminiApiKey');
@@ -2748,10 +2755,10 @@ function onScanApiKeyInput(val) {
 }
 
 function onScanYearChange(val) {
-  const be = parseInt(val, 10);
+  const be = toBE(val);
   const ceInp = document.getElementById('scanTargetYearCE');
   if (ceInp) {
-    ceInp.value = (be && be >= 2400 && be <= 3000) ? (be - 543).toString() : '-';
+    ceInp.value = (be && be >= 2400 && be <= 3000) ? be.toString() : '-';
   }
 }
 
@@ -2760,14 +2767,14 @@ function handleScanFilesSelected(files) {
 
   const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
   if (validFiles.length === 0) {
-    alert('กรุณาเลือกไฟล์ที่เป็นรูปภาพเท่านั้น (JPG, PNG, WEBP)');
+    alert('Please choose image files only (JPG, PNG, WEBP).');
     return;
   }
 
   // รองรับสูงสุด 2 รูปภาพ (เช่น หน้า/หลัง หรือ ครึ่งปีแรก/ครึ่งปีหลัง)
   const remainingSlots = 2 - scanUploadedImages.length;
   if (remainingSlots <= 0) {
-    alert('สามารถอัพโหลดรูปภาพได้สูงสุด 2 รูป หากต้องการเปลี่ยนรูป กรุณากด "ล้างรูปภาพ" ก่อน');
+    alert('You can upload up to 2 images. Click "Clear images" to replace them.');
     return;
   }
 
@@ -2789,7 +2796,7 @@ function handleScanFilesSelected(files) {
       loadedCount++;
       if (loadedCount === filesToAdd.length) {
         renderScanImagesGallery();
-        updateScanStatus(`อัพโหลดรูปภาพเรียบร้อยแล้ว (${scanUploadedImages.length}/2 รูป)`);
+        updateScanStatus(`Images uploaded (${scanUploadedImages.length}/2)`);
       }
     };
     reader.readAsDataURL(file);
@@ -2801,10 +2808,10 @@ function handleScanFilesSelected(files) {
 }
 
 async function loadSampleOrbrayImages() {
-  updateScanStatus('กำลังโหลดภาพตัวอย่างปฏิทิน Orbray 2569 (Image 1 & 2)...');
+  updateScanStatus('Loading the Orbray 2026 sample calendar…');
   const sampleUrls = [
-    { name: 'Image (1).jpg - ปฏิทิน Orbray 2569 (ม.ค. - มิ.ย.)', url: 'Image (1).jpg' },
-    { name: 'Image (2).jpg - ปฏิทิน Orbray 2569 (ก.ค. - ธ.ค.)', url: 'Image (2).jpg' }
+    { name: 'Image (1).jpg — Orbray 2026 (Jan–Jun)', url: 'Image (1).jpg' },
+    { name: 'Image (2).jpg — Orbray 2026 (Jul–Dec)', url: 'Image (2).jpg' }
   ];
 
   scanUploadedImages = [];
@@ -2865,8 +2872,8 @@ async function loadSampleOrbrayImages() {
   }
 
   renderScanImagesGallery();
-  updateScanStatus(`โหลดภาพตัวอย่างปฏิทิน Orbray 2569 สำเร็จ (${scanUploadedImages.length} รูป) สามารถกดเริ่มวิเคราะห์ได้ทันที`);
-  showToastNotification(`📂 โหลดภาพตัวอย่างปฏิทิน Orbray 2569 ครบทั้ง 2 รูปแล้ว`);
+  updateScanStatus(`Sample calendar loaded (${scanUploadedImages.length} images). Ready to analyze.`);
+  showToastNotification(`Sample calendar loaded`);
 }
 
 function clearScanImages() {
@@ -2876,14 +2883,14 @@ function clearScanImages() {
   if (resSec) resSec.style.display = 'none';
   const applyBtn = document.getElementById('btnApplyScanResult');
   if (applyBtn) applyBtn.disabled = true;
-  updateScanStatus('ล้างรูปภาพแล้ว กรุณาอัพโหลดรูปภาพปฏิทิน');
+  updateScanStatus('Images cleared. Please upload a calendar image.');
 }
 
 function removeScanImage(index) {
   if (index >= 0 && index < scanUploadedImages.length) {
     scanUploadedImages.splice(index, 1);
     renderScanImagesGallery();
-    updateScanStatus(`เหลือรูปภาพ ${scanUploadedImages.length} รูป`);
+    updateScanStatus(`${scanUploadedImages.length} image(s) remaining`);
   }
 }
 
@@ -2900,8 +2907,8 @@ function renderScanImagesGallery() {
     gallery.innerHTML = `
       <div class="scan-empty-gallery-hint">
         <div class="hint-icon">🖼️</div>
-        <div>ยังไม่ได้เลือกรูปภาพ</div>
-        <small class="text-muted">กรุณาเลือกไฟล์ภาพปฏิทิน หรือคลิก "โหลดตัวอย่างปฏิทิน Orbray 2569"</small>
+        <div>No images selected</div>
+        <small class="text-muted">Choose a calendar image, or load the Orbray sample.</small>
       </div>
     `;
     return;
@@ -2915,11 +2922,11 @@ function renderScanImagesGallery() {
       <div class="scan-img-card">
         <div class="scan-img-thumb-wrap">
           <img src="${img.dataUrl}" alt="${img.name}" class="scan-img-thumb" />
-          <button type="button" class="btn-remove-scan-img" onclick="removeScanImage(${idx})" title="ลบรูปนี้">&times;</button>
+          <button type="button" class="btn-remove-scan-img" onclick="removeScanImage(${idx})" title="Remove image">&times;</button>
         </div>
         <div class="scan-img-meta">
           <div class="scan-img-name" title="${img.name}">${img.name}</div>
-          <div class="scan-img-size">${sizeStr} • รูปที่ ${idx + 1}</div>
+          <div class="scan-img-size">${sizeStr} · Image ${idx + 1}</div>
         </div>
       </div>
     `;
@@ -2934,23 +2941,23 @@ function updateScanStatus(msg) {
 
 async function startCalendarAnalysis(mode) {
   const beInp = document.getElementById('scanTargetYearBE');
-  const targetYearBE = parseInt(beInp ? beInp.value : '2569', 10) || 2569;
+  const targetYearBE = toBE(beInp ? beInp.value : '2026') || 2569;
   const targetYearCE = targetYearBE - 543;
 
   if (mode === 'PRESET') {
-    updateScanStatus('กำลังวิเคราะห์โครงสร้างปฏิทินด้วย Smart Preset...');
+    updateScanStatus('Analyzing with Smart Preset…');
     setTimeout(() => {
       currentScanResult = buildSmartCalendarPreset(targetYearCE, targetYearBE);
       renderScanResults(currentScanResult);
-      updateScanStatus('⚡ วิเคราะห์สำเร็จด้วย Smart Preset เรียบร้อยแล้ว (สามารถคลิกแก้ไขวันได้โดยตรง)');
-      showToastNotification(`⚡ วิเคราะห์และจัดวันปฏิทินปี ${targetYearBE} เรียบร้อยแล้ว`);
+      updateScanStatus('Smart Preset analysis complete. Click any day to adjust it.');
+      showToastNotification(`Calendar ${targetYearCE} analyzed`);
     }, 250);
     return;
   }
 
   // โหมด AI Vision
   if (scanUploadedImages.length === 0) {
-    alert('กรุณาอัพโหลดรูปถ่ายการ์ดปฏิทินอย่างน้อย 1 รูป หรือคลิก "โหลดตัวอย่างปฏิทิน Orbray 2569" ก่อนเริ่มวิเคราะห์');
+    alert('Please upload at least one calendar image, or load the Orbray sample first.');
     return;
   }
 
@@ -2958,7 +2965,7 @@ async function startCalendarAnalysis(mode) {
   const apiKey = (apiKeyInp ? apiKeyInp.value.trim() : '') || localStorage.getItem(STORAGE_KEY_GEMINI_KEY) || '';
 
   if (!apiKey) {
-    const choosePreset = confirm('ยังไม่ได้ระบุ Gemini API Key สำหรับการประมวลผลด้วย Google Vision AI\n\n- กด "ตกลง (OK)" เพื่อเปิดช่องกรอก Gemini API Key\n- กด "ยกเลิก (Cancel)" เพื่อประมวลผลด้วย Smart Preset ทันที (ไม่ต้องใช้คีย์)');
+    const choosePreset = confirm('No Gemini API key has been entered.\n\n- OK: open the API key field\n- Cancel: analyze with Smart Preset instead (no key needed)');
     if (choosePreset) {
       const body = document.getElementById('scanApiKeyBody');
       if (body) body.style.display = 'block';
@@ -2980,20 +2987,20 @@ async function callGeminiCalendarVisionAPI(images, apiKey, targetYearBE, targetY
   if (spin) spin.style.display = 'inline';
   if (btnAI) btnAI.disabled = true;
   if (btnPreset) btnPreset.disabled = true;
-  updateScanStatus('✨ กำลังส่งรูปภาพให้ Google Gemini AI Vision วิเคราะห์สัญลักษณ์สีและตารางวัน...');
+  updateScanStatus('Sending images to Google Gemini Vision for analysis…');
 
   const promptText = `
 You are an expert AI specialized in Thai industrial/company annual calendar cards.
 Examine the uploaded calendar image(s) carefully.
-The user is registering the calendar for Year พ.ศ. ${targetYearBE} (CE ${targetYearCE}).
+The user is registering the calendar for Year B.E. ${targetYearBE} (CE ${targetYearCE}).
 
 Legend and Visual Markers to Detect:
-1. National Holidays (วันหยุดนักขัตฤกษ์): Marked by yellow dots or yellow shaded circles.
-2. Memorial Day with pay (วันหยุดประเพณีจ่ายเงิน): Marked by purple dots or distinct purple symbols.
-3. Special Workdays (วันทำงานพิเศษ เช่น Orbray Day): Marked with red circles, red badges, or red text on what would otherwise be a weekend/holiday.
-4. Working Saturdays (วันเสาร์ทำงาน): Look at column 'S' (Saturday).
-   - If Saturday date has NO circle around it -> It is a WORKING SATURDAY (วันเสาร์ทำงาน).
-   - If Saturday date HAS a circle around it -> It is a SATURDAY HOLIDAY (วันเสาร์หยุด).
+1. National Holidays: Marked by yellow dots or yellow shaded circles.
+2. Memorial Day with pay: Marked by purple dots or distinct purple symbols.
+3. Special Workdays (e.g. Orbray Day): Marked with red circles, red badges, or red text on what would otherwise be a weekend/holiday.
+4. Working Saturdays: Look at column 'S' (Saturday).
+   - If Saturday date has NO circle around it -> It is a WORKING SATURDAY.
+   - If Saturday date HAS a circle around it -> It is a SATURDAY HOLIDAY.
 5. Bridge / Special Holidays: Any other special company holidays indicated in the legend.
 
 Format Requirement:
@@ -3066,7 +3073,7 @@ Schema:
       if (jsonMatch) {
         parsed = JSON.parse(jsonMatch[0]);
       } else {
-        throw new Error('ไม่สามารถแปลงผลลัพธ์จาก AI เป็นโครงสร้างข้อมูล JSON ได้');
+        throw new Error('Could not parse the AI response as JSON');
       }
     }
 
@@ -3083,13 +3090,13 @@ Schema:
 
     currentScanResult = parsed;
     renderScanResults(currentScanResult);
-    updateScanStatus('✨ วิเคราะห์ภาพปฏิทินด้วย Google Gemini AI Vision สำเร็จเรียบร้อยแล้ว!');
-    showToastNotification(`✨ AI Vision วิเคราะห์ปฏิทินสำเร็จ (${parsed.workingSaturdays.length} วันเสาร์ทำงาน, ${parsed.nationalHolidays.length} วันหยุด)`);
+    updateScanStatus('Gemini Vision analysis complete.');
+    showToastNotification(`AI analysis done: ${parsed.workingSaturdays.length} working Saturdays, ${parsed.nationalHolidays.length} holidays`);
 
   } catch (error) {
     console.error('Gemini Vision API error:', error);
-    updateScanStatus(`⚠️ เกิดข้อผิดพลาดจาก AI: ${error.message}`);
-    const fallback = confirm(`ไม่สามารถเชื่อมต่อ Gemini API ได้ (${error.message})\n\nท่านต้องการใช้ระบบ Smart Preset เพื่อจัดวันให้อัตโนมัติตอนนี้หรือไม่?`);
+    updateScanStatus(`AI error: ${error.message}`);
+    const fallback = confirm(`Could not reach the Gemini API (${error.message}).\n\nUse Smart Preset instead?`);
     if (fallback) {
       startCalendarAnalysis('PRESET');
     }
@@ -3180,10 +3187,10 @@ function renderScanResults(cal) {
     compName = allCompanies[activeCompanyId] ? allCompanies[activeCompanyId].name : 'ORBRAY';
   } else {
     const newNameInp = document.getElementById('scanInpNewCompName');
-    compName = (newNameInp && newNameInp.value.trim()) ? newNameInp.value.trim().toUpperCase() : 'บริษัทใหม่';
+    compName = (newNameInp && newNameInp.value.trim()) ? newNameInp.value.trim().toUpperCase() : 'NEW COMPANY';
   }
   setElText('scanResCompName', compName);
-  setElText('scanResYear', `${cal.yearBE} / ${cal.yearCE}`);
+  setElText('scanResYear', `${cal.yearCE}`);
 
   // วาดตาราง 12 เดือนจำลองที่คลิกสลับวันได้
   renderScanMiniCalendar(cal);
@@ -3210,7 +3217,7 @@ function renderScanMiniCalendar(cal) {
     let html = `
       <div class="scan-mini-month-header">
         <strong>${m + 1}. ${THAI_MONTHS[m]}</strong>
-        <span class="text-muted small">${cal.yearBE}</span>
+        <span class="text-muted small">${cal.yearCE}</span>
       </div>
       <table class="scan-mini-table">
         <thead>
@@ -3238,7 +3245,7 @@ function renderScanMiniCalendar(cal) {
             <td class="scan-mini-cell">
               <span class="scan-mini-day-badge ${dayStatus.cls}" 
                     id="scanDay_${dateStr}"
-                    title="${dateStr} - ${dayStatus.name} (คลิกเพื่อเปลี่ยนสถานะ)"
+                    title="${dateStr} - ${dayStatus.name} (click to change)"
                     onclick="toggleScanCalendarDate('${dateStr}')">
                 ${currentDay}
               </span>
@@ -3258,34 +3265,34 @@ function renderScanMiniCalendar(cal) {
 
 function getScanDateStatus(dateStr, cal) {
   if (cal.nationalHolidays && cal.nationalHolidays.includes(dateStr)) {
-    return { type: 'NATIONAL_HOLIDAY', name: 'วันหยุดนักขัตฤกษ์', cls: 'day-national-holiday' };
+    return { type: 'NATIONAL_HOLIDAY', name: 'Public holiday', cls: 'day-national-holiday' };
   }
   if (cal.memorialHolidays && cal.memorialHolidays.includes(dateStr)) {
-    return { type: 'MEMORIAL_HOLIDAY', name: 'วันหยุดประเพณีจ่ายเงิน', cls: 'day-memorial-holiday' };
+    return { type: 'MEMORIAL_HOLIDAY', name: 'Paid company holiday', cls: 'day-memorial-holiday' };
   }
   if ((cal.orbrayWorkDays && cal.orbrayWorkDays.includes(dateStr)) || (cal.specialWorkDays && cal.specialWorkDays.includes(dateStr))) {
-    return { type: 'ORBRAY_WORKDAY', name: 'วันทำงานพิเศษ', cls: 'day-orbray-work' };
+    return { type: 'ORBRAY_WORKDAY', name: 'Special workday', cls: 'day-orbray-work' };
   }
   if (cal.bridgeHolidays && cal.bridgeHolidays.includes(dateStr)) {
-    return { type: 'BRIDGE_HOLIDAY', name: 'วันหยุดพิเศษ', cls: 'day-bridge' };
+    return { type: 'BRIDGE_HOLIDAY', name: 'Bridge holiday', cls: 'day-bridge' };
   }
 
   const d = new Date(dateStr);
   const dow = d.getDay();
 
   if (dow === 0) {
-    return { type: 'SUNDAY', name: 'วันอาทิตย์หยุด', cls: 'day-sunday' };
+    return { type: 'SUNDAY', name: 'Sunday', cls: 'day-sunday' };
   }
 
   if (dow === 6) {
     if (cal.workingSaturdays && cal.workingSaturdays.includes(dateStr)) {
-      return { type: 'WORKING_SATURDAY', name: 'เสาร์ทำงาน', cls: 'day-working-sat' };
+      return { type: 'WORKING_SATURDAY', name: 'Working Saturday', cls: 'day-working-sat' };
     } else {
-      return { type: 'SATURDAY_HOLIDAY', name: 'เสาร์หยุด', cls: 'day-sat-holiday' };
+      return { type: 'SATURDAY_HOLIDAY', name: 'Saturday off', cls: 'day-sat-holiday' };
     }
   }
 
-  return { type: 'NORMAL_WORKDAY', name: 'วันทำงานปกติ', cls: '' };
+  return { type: 'NORMAL_WORKDAY', name: 'Workday', cls: '' };
 }
 
 function toggleScanCalendarDate(dateStr) {
@@ -3339,7 +3346,7 @@ function toggleScanCalendarDate(dateStr) {
   const newStatus = getScanDateStatus(dateStr, cal);
   if (badge) {
     badge.className = `scan-mini-day-badge ${newStatus.cls}`;
-    badge.title = `${dateStr} - ${newStatus.name} (คลิกเพื่อเปลี่ยนสถานะ)`;
+    badge.title = `${dateStr} - ${newStatus.name} (click to change)`;
   }
 
   // อัปเดต KPI Summary Pills
@@ -3359,7 +3366,7 @@ function toggleScanCalendarDate(dateStr) {
 
 function applyAnalyzedCalendarToCompany() {
   if (!currentScanResult) {
-    alert('ยังไม่มีข้อมูลปฏิทินที่ผ่านการวิเคราะห์ กรุณากดปุ่มวิเคราะห์ภาพก่อน');
+    alert('No analyzed calendar yet. Please run an analysis first.');
     return;
   }
 
@@ -3374,7 +3381,7 @@ function applyAnalyzedCalendarToCompany() {
     const name = nameInp ? nameInp.value.trim() : '';
 
     if (!name) {
-      alert('กรุณาระบุชื่อบริษัทใหม่ที่ต้องการสร้าง');
+      alert('Please enter the new company name.');
       if (nameInp) nameInp.focus();
       return;
     }
@@ -3382,7 +3389,7 @@ function applyAnalyzedCalendarToCompany() {
     // ตรวจสอบชื่อซ้ำ
     const existing = Object.values(allCompanies).find(c => c.name.toLowerCase() === name.toLowerCase());
     if (existing) {
-      alert(`มีบริษัทชื่อ "${name}" อยู่ในระบบแล้ว กรุณาใช้ชื่ออื่น หรือเลือกบันทึกลงบริษัทเดิม`);
+      alert(`A company named "${name}" already exists. Use another name or save to the current company.`);
       if (nameInp) nameInp.focus();
       return;
     }
@@ -3394,7 +3401,7 @@ function applyAnalyzedCalendarToCompany() {
       id: newId,
       name: name.toUpperCase(),
       code,
-      description: `สร้างจากการวิเคราะห์รูปภาพปฏิทิน (${new Date().toLocaleDateString('th-TH')})`,
+      description: `Created from calendar image scan (${new Date().toLocaleDateString('en-GB')})`,
       isDefault: false,
       createdAt: new Date().toISOString().split('T')[0],
       calendars: {
@@ -3407,8 +3414,8 @@ function applyAnalyzedCalendarToCompany() {
     switchActiveCompany(newId);
 
     showSuccessPopup(
-      'สร้างบริษัทและจัดวันสำเร็จ',
-      `ระบบได้สร้างบริษัท "${name}" พร้อมจัดวันทำงานและวันหยุดปี พ.ศ. ${yearBE} (${yearCE}) จากภาพถ่ายปฏิทิน และสลับมาแสดงผลให้ท่านเรียบร้อยแล้ว`
+      'Company created',
+      `"${name}" was created with its ${yearCE} calendar from the scanned image and is now active.`
     );
   } else {
     // บันทึกลงบริษัทปัจจุบัน
@@ -3430,8 +3437,8 @@ function applyAnalyzedCalendarToCompany() {
     recalculateSalary();
 
     showSuccessPopup(
-      'จัดวันปฏิทินสำเร็จ',
-      `บันทึกข้อมูลปฏิทินวันทำงานปี พ.ศ. ${yearBE} (${yearCE}) ให้กับบริษัท "${comp.name}" เรียบร้อยแล้ว ระบบนำวันทำงาน วันหยุด และเสาร์ทำงานไปใช้อัตโนมัติทันที`
+      'Calendar saved',
+      `The ${yearCE} work calendar was applied to "${comp.name}".`
     );
   }
 }
@@ -3542,11 +3549,11 @@ function updateModalPeriodInfo() {
   const btnSavePeriod = document.getElementById('btnSaveSalaryForPeriod');
   const btnResetPeriod = document.getElementById('btnResetPeriodSalaryConfig');
 
-  const pName = currentPeriod ? currentPeriod.displayName : 'งวดปัจจุบัน';
-  const pMonth = currentPeriod ? currentPeriod.endMonthName : 'งวดนี้';
+  const pName = currentPeriod ? currentPeriod.displayName : 'current period';
+  const pMonth = currentPeriod ? currentPeriod.endMonthName : 'this period';
   const hasPeriodOverride = Boolean(currentPeriod && periodSalaryConfigs && periodSalaryConfigs[currentPeriod.id]);
   const pYear = currentPeriod ? currentPeriod.yearCE : '';
-  const pMobileName = currentPeriod ? `${pMonth} ${pYear}` : 'งวดนี้';
+  const pMobileName = currentPeriod ? `${pMonth} ${pYear}` : 'this period';
 
   const iconCal2D = `<svg class="modal-badge-2d-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
   const iconGlobe2D = `<svg class="modal-badge-2d-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>`;
@@ -3554,28 +3561,28 @@ function updateModalPeriodInfo() {
   const iconSave2D = `<svg class="btn-2d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>`;
 
   if (badgeEl) {
-    badgeEl.innerHTML = `${iconCal2D} <span class="desktop-only-inline">งวด: ${pName}</span><span class="mobile-only-inline">${pMobileName}</span>`;
+    badgeEl.innerHTML = `${iconCal2D} <span class="desktop-only-inline">Period: ${pName}</span><span class="mobile-only-inline">${pMobileName}</span>`;
   }
   if (statusEl) {
     if (hasPeriodOverride) {
       statusEl.className = 'card-paydate-badge modal-badge-status status-override';
-      statusEl.innerHTML = `${iconEdit2D} <span class="desktop-only-inline">มีการตั้งค่าเฉพาะงวดนี้</span><span class="mobile-only-inline">ปรับเฉพาะงวด</span>`;
+      statusEl.innerHTML = `${iconEdit2D} <span class="desktop-only-inline">Custom rates for this period</span><span class="mobile-only-inline">Custom</span>`;
     } else {
       statusEl.className = 'card-paydate-badge modal-badge-status status-global';
-      statusEl.innerHTML = `${iconGlobe2D} <span class="desktop-only-inline">ใช้ค่ามาตรฐาน (Global)</span><span class="mobile-only-inline">ค่ามาตรฐาน</span>`;
+      statusEl.innerHTML = `${iconGlobe2D} <span class="desktop-only-inline">Using standard rates</span><span class="mobile-only-inline">Standard</span>`;
     }
     statusEl.style.background = '';
     statusEl.style.color = '';
     statusEl.style.borderColor = '';
   }
   if (subtitleEl) {
-    subtitleEl.innerHTML = `<span class="desktop-only-inline">ปรับเปลี่ยนอัตราเงินเดือน เบี้ยเลี้ยง และสูตร OT สำหรับ ${pName}</span><span class="mobile-only-inline">กำหนดอัตราเงินเดือน เบี้ยเลี้ยง และสูตร OT</span>`;
+    subtitleEl.innerHTML = `<span class="desktop-only-inline">Salary, allowance and overtime rates for ${pName}</span><span class="mobile-only-inline">Salary, allowances and OT rates</span>`;
   }
   const saveLabelEl = document.getElementById('btnSaveSalaryPeriodLabel');
   if (saveLabelEl) {
-    saveLabelEl.innerText = `บันทึกเฉพาะงวดนี้ (${pMonth})`;
+    saveLabelEl.innerText = `Save for ${pMonth} only`;
   } else if (btnSavePeriod) {
-    btnSavePeriod.innerHTML = `${iconSave2D} <span>บันทึกเฉพาะงวดนี้ (${pMonth})</span>`;
+    btnSavePeriod.innerHTML = `${iconSave2D} <span>Save for ${pMonth} only</span>`;
   }
   if (btnResetPeriod) {
     btnResetPeriod.style.display = hasPeriodOverride ? 'inline-flex' : 'none';
@@ -3620,7 +3627,7 @@ function saveSalaryConfigFromModal(scope = 'period') {
   };
 
   const periodId = currentPeriod ? currentPeriod.id : null;
-  const periodName = currentPeriod ? currentPeriod.displayName : 'งวดปัจจุบัน';
+  const periodName = currentPeriod ? currentPeriod.displayName : 'current period';
 
   if (scope === 'all') {
     // บันทึกเป็นค่ามาตรฐานสำหรับทุกงวด
@@ -3648,8 +3655,8 @@ function saveSalaryConfigFromModal(scope = 'period') {
     updateRateLabelsOnCards();
     updateCardPeriodBadge();
     recalculateSalary();
-    showSuccessPopup('บันทึกสำเร็จ', 'บันทึกโครงสร้างค่าเงินเป็นค่ามาตรฐานสำหรับทุกงวดเรียบร้อยแล้ว');
-    showToastNotification('🌐 บันทึกค่ามาตรฐานสำหรับทุกงวดเรียบร้อยแล้ว!');
+    showSuccessPopup('Saved', 'These rates are now the standard for all periods.');
+    showToastNotification('Standard rates saved for all periods');
   } else {
     // บันทึกเฉพาะงวดนี้ (Default behavior)
     if (periodId) {
@@ -3661,18 +3668,18 @@ function saveSalaryConfigFromModal(scope = 'period') {
     updateRateLabelsOnCards();
     updateCardPeriodBadge();
     recalculateSalary();
-    showSuccessPopup('บันทึกเฉพาะงวดสำเร็จ', `บันทึกโครงสร้างค่าเงินเฉพาะงวด ${periodName} เรียบร้อยแล้ว (งวดเดือนอื่นจะไม่ได้รับผลกระทบ)`);
-    showToastNotification(`💾 บันทึกค่าเงินเฉพาะงวด ${periodName} เรียบร้อยแล้ว!`);
+    showSuccessPopup('Saved for this period', `Rates saved for ${periodName}. Other periods are unaffected.`);
+    showToastNotification(`Rates saved for ${periodName}`);
   }
 }
 
 function resetPeriodSalaryConfigToDefault() {
   if (!currentPeriod || !currentPeriod.id) return;
   if (!periodSalaryConfigs || !periodSalaryConfigs[currentPeriod.id]) {
-    showToastNotification('งวดนี้ใช้ค่ามาตรฐานอยู่แล้ว');
+    showToastNotification('This period already uses standard rates');
     return;
   }
-  if (confirm(`คุณต้องการลบการตั้งค่าเฉพาะงวด "${currentPeriod.displayName}" และกลับไปใช้ค่ามาตรฐานหรือไม่?`)) {
+  if (confirm(`Remove the custom rates for "${currentPeriod.displayName}" and use standard rates?`)) {
     delete periodSalaryConfigs[currentPeriod.id];
     savePeriodSalaryConfigsToStorage();
     currentSalaryConfig = getSalaryConfigForPeriod(currentPeriod.id);
@@ -3680,14 +3687,14 @@ function resetPeriodSalaryConfigToDefault() {
     updateRateLabelsOnCards();
     updateCardPeriodBadge();
     recalculateSalary();
-    showSuccessPopup('คืนค่ามาตรฐานสำเร็จ', `คืนโครงสร้างค่าเงินงวด ${currentPeriod.displayName} กลับเป็นค่ามาตรฐานเรียบร้อยแล้ว`);
-    showToastNotification(`↩️ คืนค่ามาตรฐานสำหรับงวด ${currentPeriod.displayName} เรียบร้อยแล้ว`);
+    showSuccessPopup('Restored', `${currentPeriod.displayName} now uses standard rates.`);
+    showToastNotification(`${currentPeriod.displayName} restored to standard rates`);
   }
 }
 
 function clearSalaryConfigToZero() {
-  const periodName = currentPeriod ? currentPeriod.displayName : 'งวดนี้';
-  if (confirm(`คุณต้องการปรับยอดเงินเดือน เบี้ยเลี้ยง และเงินหักทั้งหมดให้เป็น 0 ใช่หรือไม่?\n\n(สำหรับกรณีงวด ${periodName} ที่ยังไม่ได้เข้าทำงาน หรือยังไม่มีรายได้)`)) {
+  const periodName = currentPeriod ? currentPeriod.displayName : 'this period';
+  if (confirm(`Set salary, allowances and deductions to 0?\n\n(Use this if you had not started work or had no income in ${periodName}.)`)) {
     setInputValue('cfgBaseSalary', 0);
     setInputValue('cfgTransportationAllowance', 0);
     setInputValue('cfgDiligenceFullAmount', 0);
@@ -3696,12 +3703,12 @@ function clearSalaryConfigToZero() {
     setInputValue('cfgSsoDeduction', 0);
     setInputValue('cfgSsoMaxBase', 0);
     updateLiveOTPreview();
-    showToastNotification('🧹 เคลียร์ค่าเงินและเบี้ยเลี้ยงเป็น 0 ทั้งหมดแล้ว (กรุณากด "💾 บันทึกเฉพาะงวดนี้" เพื่อยืนยัน)');
+    showToastNotification('All values set to 0 — press "Save for this period" to confirm');
   }
 }
 
 function resetSalaryConfigToDefault() {
-  if (confirm('คุณต้องการรีเซ็ตค่าในฟอร์มเป็นค่ามาตรฐานเริ่มต้นตามรูปที่ 2 หรือไม่?')) {
+  if (confirm('Reset the form to the default values?')) {
     setInputValue('cfgBaseSalary', DEFAULT_SALARY_CONFIG.baseSalary);
     setInputValue('cfgTransportationAllowance', DEFAULT_SALARY_CONFIG.transportationAllowance);
     setInputValue('cfgDiligenceFullAmount', DEFAULT_SALARY_CONFIG.diligenceFullAmount);
@@ -3713,7 +3720,7 @@ function resetSalaryConfigToDefault() {
     setInputValue('cfgSsoDeduction', DEFAULT_SALARY_CONFIG.ssoDeduction);
     setInputValue('cfgSsoMaxBase', DEFAULT_SALARY_CONFIG.ssoMaxBase);
     updateLiveOTPreview();
-    showToastNotification('🔄 รีเซ็ตค่าในฟอร์มเป็นค่ามาตรฐานแล้ว (กรุณากดบันทึกเพื่อยืนยัน)');
+    showToastNotification('Form reset to defaults — press Save to confirm');
   }
 }
 
@@ -3808,29 +3815,29 @@ async function submitPinLogin() {
   const pin = input ? input.value.trim() : '';
 
   if (!pin) {
-    showAuthError('กรุณาระบุรหัส PIN');
+    showAuthError('Please enter your PIN.');
     return;
   }
 
   const btn = document.getElementById('btnAuthSubmit');
   const prevText = btn ? btn.innerText : '';
-  if (btn) { btn.disabled = true; btn.innerText = 'กำลังตรวจสอบ...'; }
+  if (btn) { btn.disabled = true; btn.innerText = 'Checking…'; }
 
   try {
     const res = await loginWithPin(pin);
     if (res.success) {
-      const roleText = res.user.role === 'admin' ? 'ผู้ดูแลระบบ (ADMIN)' : 'พนักงาน';
-      showAuthSuccess(`เข้าสู่ระบบสำเร็จ! สวัสดีคุณ ${res.user.name} (${roleText})`);
+      const roleText = res.user.role === 'admin' ? 'Admin' : 'Employee';
+      showAuthSuccess(`Welcome, ${res.user.name} (${roleText})`);
       setTimeout(() => {
         closeAuthModal();
         reloadUserDataAfterAuthChange();
-        showToastNotification(`เข้าสู่ระบบสำเร็จ: ${res.user.name}`);
+        showToastNotification(`Signed in as ${res.user.name}`);
       }, 500);
     } else {
-      showAuthError(res.error || 'รหัส PIN ไม่ถูกต้อง');
+      showAuthError(res.error || 'Incorrect PIN.');
     }
   } catch (err) {
-    showAuthError(err.message || 'เกิดข้อผิดพลาดในการตรวจสอบรหัส PIN');
+    showAuthError(err.message || 'Could not verify the PIN.');
   } finally {
     if (btn) { btn.disabled = false; btn.innerText = prevText; }
   }
@@ -3843,10 +3850,10 @@ function quickLoginAdmin() {
 }
 
 async function handleLogout() {
-  if (confirm('คุณต้องการออกจากระบบหรือไม่?')) {
+  if (confirm('Sign out?')) {
     await logoutCurrentUser();
     reloadUserDataAfterAuthChange();
-    showToastNotification('ออกจากระบบเรียบร้อยแล้ว');
+    showToastNotification('Signed out');
   }
 }
 
@@ -3872,7 +3879,7 @@ function switchEditingUser(targetUserId) {
 
   // ตรวจสอบสิทธิ์: เฉพาะ ADMIN (JITTRAKAN K.) เท่านั้นที่สามารถดูหรือสลับข้อมูลของพนักงานคนอื่นได้
   if (!currentUser || currentUser.role !== 'admin' || currentUser.id !== 'user_admin') {
-    showToastNotification('⚠️ คุณไม่มีสิทธิ์ดูข้อมูลของพนักงานคนอื่น เฉพาะ ADMIN เท่านั้น');
+    showToastNotification('Only admins can view other employees');
     return;
   }
 
@@ -3895,7 +3902,7 @@ function switchEditingUser(targetUserId) {
   if (modalSelect) modalSelect.value = targetUserId;
   updateNavbarAuthUI(currentUser);
 
-  showToastNotification(`สลับไปยังข้อมูลของ: ${targetUser.name}`);
+  showToastNotification(`Now viewing: ${targetUser.name}`);
 }
 
 /**
@@ -3914,9 +3921,9 @@ function updateAdminScopeBanner() {
     const bannerHtml = `
       <div class="banner-content">
         <span class="banner-icon">⚠️</span>
-        <span>กำลังดู/แก้ไขข้อมูลของ: <strong>${escapeHtml(activeUser.name)}</strong> (โหมดผู้ดูแลระบบ)</span>
+        <span>Viewing as admin: <strong>${escapeHtml(activeUser.name)}</strong></span>
         <button type="button" class="btn btn-xs btn-outline-primary" onclick="switchEditingUser('user_admin')">
-          กลับไปยังข้อมูลของฉัน
+          Back to my data
         </button>
       </div>
     `;
@@ -3970,20 +3977,20 @@ function openUserProfileModal(event) {
       roleBadgeEl.className = 'user-modal-role-pill role-admin';
       roleBadgeEl.innerHTML = `
         <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-        <span>ผู้ดูแลระบบ (ADMIN)</span>
+        <span>Admin</span>
       `;
     } else {
       roleBadgeEl.className = 'user-modal-role-pill role-user';
       roleBadgeEl.innerHTML = `
         <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 0 1 8 0v2"/></svg>
-        <span>พนักงานทั่วไป (USER)</span>
+        <span>Employee</span>
       `;
     }
   }
 
   const codeEl = document.getElementById('userModalCode');
   if (codeEl) {
-    codeEl.innerText = currentUser.empCode ? `รหัส: ${currentUser.empCode}` : `ID: ${currentUser.id ? currentUser.id.replace('user_', '') : '20523'}`;
+    codeEl.innerText = currentUser.empCode ? `ID: ${currentUser.empCode}` : `ID: ${currentUser.id ? currentUser.id.replace('user_', '') : '20523'}`;
   }
 
   // 3. Admin Switch Section & Manage Users button
@@ -3999,7 +4006,7 @@ function openUserProfileModal(event) {
       const allUsers = getAllSystemUsers();
       switchSelect.innerHTML = allUsers.map(u => {
         const isSel = (u.id === activeUserId) ? 'selected' : '';
-        const meLabel = (u.id === currentUser.id) ? ' (ฉันเอง)' : '';
+        const meLabel = (u.id === currentUser.id) ? ' (me)' : '';
         return `<option value="${u.id}" ${isSel}>${escapeHtml(u.name.toUpperCase())}${meLabel}</option>`;
       }).join('');
     }
@@ -4106,7 +4113,7 @@ function getFirebaseStatusPillHtml(isOnline) {
     tooltip = `FIREBASE SERVER: OFFLINE (${pId}) — CLICK TO CHECK CONFIG`;
   }
   return `
-    <button type="button" class="btn-firebase-pill ${statusClass}" onclick="openFirebaseConfigModal()" title="${tooltip}" aria-label="เซิร์ฟเวอร์ FIREBASE">
+    <button type="button" class="btn-firebase-pill ${statusClass}" onclick="openFirebaseConfigModal()" title="${tooltip}" aria-label="Firebase server">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>
       </svg>
@@ -4120,7 +4127,7 @@ function getSimulatorTriggerBtnHtml() {
     return '';
   }
   return `
-    <button type="button" class="btn-simulator-trigger" id="btnPhoneSimulator" onclick="openPhoneSimulator()" title="จำลองหน้าจอแอปบนมือถือ (PHONE SIMULATOR)">
+    <button type="button" class="btn-simulator-trigger" id="btnPhoneSimulator" onclick="openPhoneSimulator()" title="Phone preview">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="5" y="2" width="14" height="20" rx="3" ry="3"/>
         <line x1="12" y1="18" x2="12.01" y2="18"/>
@@ -4154,8 +4161,8 @@ function updateNavbarAuthUI(user, isOnline) {
           ${fbPillHtml}
 
           <div class="user-menu-container">
-            <button type="button" class="btn-user-profile-trigger" id="userProfileTriggerBtn" onclick="openUserProfileModal(event)" title="ผู้ดูแลระบบ: ${escapeHtml(activeUser.name)} (คลิกเพื่อเปิดโปรไฟล์)">
-              <span class="user-role-badge user-role-badge-icon" title="ผู้ดูแลระบบ (ADMIN)">
+            <button type="button" class="btn-user-profile-trigger" id="userProfileTriggerBtn" onclick="openUserProfileModal(event)" title="Admin: ${escapeHtml(activeUser.name)} — open profile">
+              <span class="user-role-badge user-role-badge-icon" title="Admin">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
               </span>
             </button>
@@ -4170,8 +4177,8 @@ function updateNavbarAuthUI(user, isOnline) {
           ${fbPillHtml}
 
           <div class="user-menu-container">
-            <button type="button" class="btn-user-profile-trigger" id="userProfileTriggerBtn" onclick="openUserProfileModal(event)" title="พนักงาน: ${escapeHtml(user.name)} (คลิกเพื่อเปิดโปรไฟล์)">
-              <span class="user-role-badge badge-user user-role-badge-icon" title="พนักงาน (USER)">
+            <button type="button" class="btn-user-profile-trigger" id="userProfileTriggerBtn" onclick="openUserProfileModal(event)" title="Employee: ${escapeHtml(user.name)} — open profile">
+              <span class="user-role-badge badge-user user-role-badge-icon" title="Employee">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </span>
             </button>
@@ -4186,10 +4193,10 @@ function updateNavbarAuthUI(user, isOnline) {
         ${simBtnHtml}
         ${fbPillHtml}
         <button type="button" class="btn-factorium-outline" onclick="openAuthModal()">
-          เข้าสู่ระบบ (LOGIN)
+          Get started
         </button>
         <button type="button" class="btn-factorium-gradient" onclick="openAuthModal()">
-          เริ่มใช้งาน (START)
+          Sign in
         </button>
       </div>
     `;
@@ -4210,7 +4217,7 @@ function openAccountModal() {
 
   const user = currentUser || (typeof getActiveEditingUser === 'function' ? getActiveEditingUser() : null);
   if (!user) {
-    showToastNotification('⚠️ กรุณาเข้าสู่ระบบก่อนจัดการบัญชี');
+    showToastNotification('Please sign in to manage your account');
     openAuthModal();
     return;
   }
@@ -4231,21 +4238,21 @@ function openAccountModal() {
   const summaryRole = document.getElementById('accSummaryRole');
   if (summaryRole) {
     summaryRole.className = user.role === 'admin' ? 'badge-account-role' : 'badge-account-role-user';
-    summaryRole.textContent = user.role === 'admin' ? 'ผู้ดูแลระบบ (ADMIN)' : 'พนักงาน (USER)';
+    summaryRole.textContent = user.role === 'admin' ? 'Admin' : 'Employee';
   }
 
   const summaryCode = document.getElementById('accSummaryCode');
   if (summaryCode) summaryCode.textContent = 'ID: ' + (user.empCode || (user.id === 'user_admin' ? '20523' : ('EMP-' + user.pin)));
 
   const summaryDept = document.getElementById('accSummaryDept');
-  if (summaryDept) summaryDept.textContent = user.department || 'ฝ่ายปฏิบัติการ';
+  if (summaryDept) summaryDept.textContent = user.department || 'Operations';
 
   // เติมฟอร์ม
   const elName = document.getElementById('accName');
   if (elName) elName.value = user.name || '';
 
   const elCompany = document.getElementById('accCompany');
-  if (elCompany) elCompany.value = user.companyName || 'CACULATION SALARY';
+  if (elCompany) elCompany.value = user.companyName || 'CALSA';
 
   const elEmpCode = document.getElementById('accEmpCode');
   if (elEmpCode) elEmpCode.value = user.empCode || (user.id === 'user_admin' ? '20523' : ('EMP-' + user.pin));
@@ -4300,7 +4307,7 @@ function handleSaveAccountProfile(e) {
   if (!name) {
     if (alertBox) {
       alertBox.className = 'alert alert-danger';
-      alertBox.textContent = 'กรุณาระบุชื่อ-นามสกุล';
+      alertBox.textContent = 'Please enter a full name.';
       alertBox.style.display = 'block';
     }
     return;
@@ -4309,7 +4316,7 @@ function handleSaveAccountProfile(e) {
   if (!pin || !/^\d{4,8}$/.test(pin)) {
     if (alertBox) {
       alertBox.className = 'alert alert-danger';
-      alertBox.textContent = 'รหัส PIN ต้องเป็นตัวเลขความยาว 4–8 หลัก';
+      alertBox.textContent = 'PIN must be 4–8 digits.';
       alertBox.style.display = 'block';
     }
     return;
@@ -4317,7 +4324,7 @@ function handleSaveAccountProfile(e) {
 
   const res = updateCurrentAccountProfile({
     name,
-    companyName: (companyName || 'CACULATION SALARY').toUpperCase(),
+    companyName: (companyName || 'CALSA').toUpperCase(),
     empCode: (empCode || '-').toUpperCase(),
     department: department || '-',
     pin
@@ -4332,15 +4339,15 @@ function handleSaveAccountProfile(e) {
     }
 
     closeAccountModal();
-    showSuccessPopup('บันทึกสำเร็จ', `บันทึกข้อมูลบัญชี (${name}) เรียบร้อยแล้ว`);
-    showToastNotification(`✅ บันทึกข้อมูลบัญชี (${name}) เรียบร้อยแล้ว!`);
+    showSuccessPopup('Saved', `Account details for ${name} saved.`);
+    showToastNotification(`Account saved`);
   } else {
     if (alertBox) {
       alertBox.className = 'alert alert-danger';
-      alertBox.textContent = res.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+      alertBox.textContent = res.error || 'Could not save. Please try again.';
       alertBox.style.display = 'block';
     } else {
-      alert(res.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      alert(res.error || 'Could not save. Please try again.');
     }
   }
 }
@@ -4350,7 +4357,7 @@ function handleSaveAccountProfile(e) {
  */
 function openManageUsersModal() {
   if (!currentUser || currentUser.role !== 'admin' || currentUser.id !== 'user_admin') {
-    showToastNotification('⚠️ คุณต้องเข้าสู่ระบบเป็น ADMIN (JITTRAKAN K.) เพื่อจัดการผู้ใช้');
+    showToastNotification('Sign in as admin to manage users');
     openAuthModal();
     return;
   }
@@ -4385,11 +4392,11 @@ function renderManageUsersTable() {
         ? '<span class="badge-pill-locked" title="MASTER ADMIN">MASTER</span>' 
         : `
           <div class="user-action-group">
-            <button type="button" class="btn btn-outline-primary btn-action-pill" onclick="openEditUserModal('${u.id}')" title="EDIT USER">
-              EDIT
+            <button type="button" class="btn btn-outline-primary btn-action-pill" onclick="openEditUserModal('${u.id}')" title="Edit">
+              Edit
             </button>
-            <button type="button" class="btn btn-outline-danger btn-action-pill" onclick="confirmDeleteUser('${u.id}')" title="DELETE USER">
-              DELETE
+            <button type="button" class="btn btn-outline-danger btn-action-pill" onclick="confirmDeleteUser('${u.id}')" title="Delete">
+              Delete
             </button>
           </div>
         `;
@@ -4419,11 +4426,11 @@ function renderManageUsersTable() {
         ? '<span class="badge-pill-locked" title="MASTER ADMIN">MASTER</span>' 
         : `
           <div class="user-card-action-btns">
-            <button type="button" class="btn btn-outline-primary btn-action-pill" onclick="openEditUserModal('${u.id}')" title="แก้ไขข้อมูล">
-              แก้ไข
+            <button type="button" class="btn btn-outline-primary btn-action-pill" onclick="openEditUserModal('${u.id}')" title="Edit">
+              Edit
             </button>
-            <button type="button" class="btn btn-outline-danger btn-action-pill" onclick="confirmDeleteUser('${u.id}')" title="ลบผู้ใช้">
-              ลบ
+            <button type="button" class="btn btn-outline-danger btn-action-pill" onclick="confirmDeleteUser('${u.id}')" title="Delete">
+              Delete
             </button>
           </div>
         `;
@@ -4443,16 +4450,16 @@ function renderManageUsersTable() {
           <div class="user-card-info-grid">
             <div class="user-card-info-row">
               <div class="user-card-meta-item">
-                <span class="user-card-meta-label">รหัส:</span>
+                <span class="user-card-meta-label">ID:</span>
                 <span class="user-card-val">${escapeHtml(u.empCode || '-')}</span>
               </div>
               <div class="user-card-meta-item">
-                <span class="user-card-meta-label">รหัส PIN:</span>
+                <span class="user-card-meta-label">PIN:</span>
                 <span class="user-card-val">${escapeHtml(u.pin)}</span>
               </div>
             </div>
             <div class="user-card-dept-row">
-              <span class="user-card-meta-label">แผนก:</span>
+              <span class="user-card-meta-label">Dept:</span>
               <span class="user-card-dept-text">${escapeHtml(u.department || '-')}</span>
             </div>
           </div>
@@ -4469,7 +4476,7 @@ function handleAddNewUserSubmit(e) {
   const pin = document.getElementById('newUserPin')?.value.trim();
   const dept = document.getElementById('newUserDept')?.value.trim();
 
-  const res = registerNewUser(name, pin, 'user', dept, 'CACULATION SALARY', empCode);
+  const res = registerNewUser(name, pin, 'user', dept, 'CALSA', empCode);
   if (res.success) {
     document.getElementById('newUserName').value = '';
     if (document.getElementById('newUserEmpCode')) document.getElementById('newUserEmpCode').value = '';
@@ -4477,10 +4484,10 @@ function handleAddNewUserSubmit(e) {
     document.getElementById('newUserDept').value = '';
     renderManageUsersTable();
     updateNavbarAuthUI(currentUser, isFirebaseOnline);
-    showSuccessPopup('บันทึกสำเร็จ', `เพิ่มพนักงาน ${name} (PIN: ${pin}) เรียบร้อยแล้ว`);
-    showToastNotification(`✅ เพิ่มพนักงาน ${name} (รหัส: ${res.user.empCode}, PIN: ${pin}) เรียบร้อยแล้ว!`);
+    showSuccessPopup('Employee added', `${name} (PIN: ${pin}) was added.`);
+    showToastNotification(`Added ${name} (ID ${res.user.empCode})`);
   } else {
-    alert(res.error || 'ไม่สามารถเพิ่มผู้ใช้ได้');
+    alert(res.error || 'Could not add the user.');
   }
 }
 
@@ -4489,7 +4496,7 @@ function handleAddNewUserSubmit(e) {
  */
 function openEditUserModal(userId) {
   if (!currentUser || currentUser.role !== 'admin' || currentUser.id !== 'user_admin') {
-    showToastNotification('⚠️ คุณไม่มีสิทธิ์แก้ไขข้อมูลพนักงาน เฉพาะ ADMIN เท่านั้น');
+    showToastNotification('Only admins can edit employees');
     return;
   }
   const users = getAllSystemUsers(true);
@@ -4536,7 +4543,7 @@ function handleSaveEditUserSubmit(e) {
 
   if (!userId || !name) {
     if (alertBox) {
-      alertBox.textContent = 'กรุณาระบุชื่อ-นามสกุลพนักงาน';
+      alertBox.textContent = 'Please enter the employee name.';
       alertBox.style.display = 'block';
     }
     return;
@@ -4544,7 +4551,7 @@ function handleSaveEditUserSubmit(e) {
 
   if (!pin || !/^\d{4,8}$/.test(pin)) {
     if (alertBox) {
-      alertBox.textContent = 'รหัส PIN ต้องเป็นตัวเลขความยาว 4–8 หลักเท่านั้น';
+      alertBox.textContent = 'PIN must be 4–8 digits.';
       alertBox.style.display = 'block';
     }
     return;
@@ -4565,36 +4572,36 @@ function handleSaveEditUserSubmit(e) {
       recalculateSalary();
     }
     closeEditUserModal();
-    showSuccessPopup('บันทึกสำเร็จ', `อัปเดตข้อมูลพนักงาน "${name}" เรียบร้อยแล้ว`);
-    showToastNotification(`✅ อัปเดตข้อมูลพนักงาน "${name}" สำเร็จ!`);
+    showSuccessPopup('Saved', `"${name}" was updated.`);
+    showToastNotification(`${name} updated`);
   } else {
     if (alertBox) {
-      alertBox.textContent = res.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+      alertBox.textContent = res.error || 'Could not save. Please try again.';
       alertBox.style.display = 'block';
     } else {
-      alert(res.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      alert(res.error || 'Could not save. Please try again.');
     }
   }
 }
 
 function confirmDeleteUser(userId) {
   if (userId === 'user_admin') {
-    alert('ไม่สามารถลบบัญชีผู้ดูแลระบบหลัก (JITTRAKAN K.) ได้');
+    alert('The main admin account (JITTRAKAN K.) cannot be deleted.');
     return;
   }
   const users = getAllSystemUsers();
   const u = users.find(x => x.id === userId);
   if (!u) return;
 
-  if (confirm(`คุณต้องการลบพนักงาน "${u.name}" (รหัส: ${u.empCode || '-'}, PIN: ${u.pin}) ออกจากระบบหรือไม่?`)) {
+  if (confirm(`Delete "${u.name}" (ID ${u.empCode || '-'}, PIN ${u.pin})?`)) {
     const res = deleteSystemUser(userId);
     if (res.success) {
       renderManageUsersTable();
       updateNavbarAuthUI(currentUser, isFirebaseOnline);
       reloadUserDataAfterAuthChange();
-      showToastNotification(`🗑️ ลบพนักงาน "${u.name}" เรียบร้อยแล้ว`);
+      showToastNotification(`${u.name} deleted`);
     } else {
-      alert(res.error || 'ไม่สามารถลบได้');
+      alert(res.error || 'Could not delete.');
     }
   }
 }
@@ -4603,16 +4610,16 @@ function confirmClearAllStaffUsers() {
   const users = getAllSystemUsers();
   const staffUsers = users.filter(u => u.id !== 'user_admin');
   if (staffUsers.length === 0) {
-    showToastNotification('ℹ️ ปัจจุบันไม่มีรายชื่อพนักงานอื่นในระบบ (มีเฉพาะ ADMIN)');
+    showToastNotification('There are no other employees yet');
     return;
   }
 
-  if (confirm(`คุณต้องการลบรายชื่อพนักงานทั้งหมดจำนวน ${staffUsers.length} คน ออกจากระบบหรือไม่?\n\n* บัญชีผู้ดูแลระบบหลัก (JITTRAKAN K.) จะยังคงอยู่ตามปกติ`)) {
+  if (confirm(`Delete all ${staffUsers.length} employees?\n\nThe main admin account (JITTRAKAN K.) will be kept.`)) {
     clearAllStaffUsers();
     renderManageUsersTable();
     updateNavbarAuthUI(currentUser, isFirebaseOnline);
     reloadUserDataAfterAuthChange();
-    showToastNotification('🗑️ ลบรายชื่อพนักงานทั้งหมดเรียบร้อยแล้ว');
+    showToastNotification('All employees deleted');
   }
 }
 
@@ -4657,17 +4664,17 @@ function openFirebaseConfigModal() {
       statusBanner.innerHTML = `
         <div class="fb-status-icon">🟢</div>
         <div class="fb-status-content" style="flex:1;">
-          <div class="fb-status-title">เซิร์ฟเวอร์: <strong>${escapeHtml(cfg.projectId)}</strong> <span class="fb-status-tag-custom">(ออนไลน์)</span></div>
-          <div class="fb-status-desc">เชื่อมต่อ Firebase Firestore สำเร็จ ข้อมูลจะถูกซิงก์ออนไลน์แบบเรียลไทม์</div>
+          <div class="fb-status-title">Server: <strong>${escapeHtml(cfg.projectId)}</strong> <span class="fb-status-tag-custom">Online</span></div>
+          <div class="fb-status-desc">Connected to Firebase Firestore. Data syncs in real time.</div>
           <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
             <button type="button" class="btn btn-sm" style="background:#111111; color:#ffffff; border:1px solid #111111; font-size:0.76rem; padding:5px 10px; border-radius:6px; cursor:pointer; font-weight:600;" onclick="copyFirebaseSyncLinkForMobile()">
-              📲 คัดลอกลิงก์ซิงก์เข้ามือถืออัตโนมัติ
+              Copy mobile sync link
             </button>
             <button type="button" class="btn btn-sm" style="background:#ffffff; color:#111111; border:1px solid #cbd5e1; font-size:0.76rem; padding:5px 10px; border-radius:6px; cursor:pointer; font-weight:600;" onclick="manualPullFromCloud()">
-              ☁️ ดึงข้อมูลจาก Cloud
+              Pull from cloud
             </button>
             <button type="button" class="btn btn-sm" style="background:#ffffff; color:#111111; border:1px solid #cbd5e1; font-size:0.76rem; padding:5px 10px; border-radius:6px; cursor:pointer; font-weight:600;" onclick="manualPushToCloud()">
-              📤 อัปโหลดข้อมูลขึ้น Cloud
+              Push to cloud
             </button>
           </div>
         </div>
@@ -4677,8 +4684,8 @@ function openFirebaseConfigModal() {
       statusBanner.innerHTML = `
         <div class="fb-status-icon">🟡</div>
         <div class="fb-status-content">
-          <div class="fb-status-title">เซิร์ฟเวอร์: <strong>Local Storage</strong> <span class="fb-status-tag-demo">(ออฟไลน์)</span></div>
-          <div class="fb-status-desc">ยังไม่ได้เชื่อมต่อ Cloud ข้อมูลถูกจัดเก็บแยกตามเบราว์เซอร์ของแต่ละเครื่อง (หากต้องการให้คอมและมือถือซิงก์กัน กรุณาใส่คอนฟิก Firebase ด้านล่าง หรือเปิดผ่านลิงก์ซิงก์จากเครื่องที่เชื่อมต่อแล้ว)</div>
+          <div class="fb-status-title">Server: <strong>Local storage</strong> <span class="fb-status-tag-demo">Offline</span></div>
+          <div class="fb-status-desc">Not connected to the cloud. Data is stored in this browser only. To sync between computer and phone, enter a Firebase config below or open a sync link from a connected device.</div>
         </div>
       `;
     }
@@ -4705,7 +4712,7 @@ function copyFirebaseSyncLinkForMobile() {
 
   const syncUrl = typeof generateFirebaseSyncUrl === 'function' ? generateFirebaseSyncUrl(cfg) : '';
   if (!syncUrl) {
-    showToastNotification('⚠️ กรุณาบันทึกการเชื่อมต่อ Firebase ก่อนสร้างลิงก์ซิงก์');
+    showToastNotification('Save a Firebase connection before creating a sync link');
     return;
   }
 
@@ -4713,15 +4720,15 @@ function copyFirebaseSyncLinkForMobile() {
     navigator.clipboard.writeText(syncUrl).then(() => {
       if (alertBox) {
         alertBox.className = 'alert alert-success';
-        alertBox.innerHTML = '📲 <strong>คัดลอกลิงก์ซิงก์เข้ามือถือสำเร็จ!</strong> ส่งลิงก์นี้ไปเปิดบนเบราว์เซอร์มือถือ ระบบจะเชื่อมต่อ Firebase และดึงข้อมูลทั้งหมดให้อัตโนมัติทันทีโดยไม่ต้องกรอกคอนฟิกใหม่';
+        alertBox.innerHTML = '<strong>Sync link copied.</strong> Open it in your phone browser to connect Firebase and pull all data automatically.';
         alertBox.style.display = 'block';
       }
-      showToastNotification('📲 คัดลอกลิงก์ซิงก์เข้ามือถือเรียบร้อยแล้ว!');
+      showToastNotification('Sync link copied');
     }).catch(() => {
-      prompt('คัดลอกลิงก์ด้านล่างเพื่อนำไปเปิดในมือถือ:', syncUrl);
+      prompt('Copy this link and open it on your phone:', syncUrl);
     });
   } else {
-    prompt('คัดลอกลิงก์ด้านล่างเพื่อนำไปเปิดในมือถือ:', syncUrl);
+    prompt('Copy this link and open it on your phone:', syncUrl);
   }
 }
 
@@ -4729,7 +4736,7 @@ async function manualPullFromCloud() {
   const alertBox = document.getElementById('fbConfigAlert');
   if (alertBox) {
     alertBox.className = 'alert alert-info';
-    alertBox.textContent = '⏳ กำลังดึงข้อมูลล่าสุดจาก Cloud Firestore...';
+    alertBox.textContent = 'Pulling the latest data from Cloud Firestore…';
     alertBox.style.display = 'block';
   }
   if (typeof pullAllUserDataFromCloud === 'function') {
@@ -4737,8 +4744,8 @@ async function manualPullFromCloud() {
     if (alertBox) {
       alertBox.className = ok ? 'alert alert-success' : 'alert alert-danger';
       alertBox.textContent = ok
-        ? '✅ ดึงข้อมูลทั้งหมดจาก Cloud มาอัปเดตในเครื่องนี้เรียบร้อยแล้ว!'
-        : '❌ ไม่สามารถดึงข้อมูลจาก Cloud ได้ กรุณาตรวจสอบการเชื่อมต่อ';
+        ? 'All cloud data has been pulled to this device.'
+        : 'Could not pull from the cloud. Please check the connection.';
     }
   }
 }
@@ -4747,7 +4754,7 @@ async function manualPushToCloud() {
   const alertBox = document.getElementById('fbConfigAlert');
   if (alertBox) {
     alertBox.className = 'alert alert-info';
-    alertBox.textContent = '⏳ กำลังอัปโหลดข้อมูลทั้งหมดในเครื่องนี้ขึ้น Cloud Firestore...';
+    alertBox.textContent = 'Uploading all data on this device to Cloud Firestore…';
     alertBox.style.display = 'block';
   }
   if (typeof pushAllLocalDataToCloud === 'function') {
@@ -4755,8 +4762,8 @@ async function manualPushToCloud() {
     if (alertBox) {
       alertBox.className = ok ? 'alert alert-success' : 'alert alert-danger';
       alertBox.textContent = ok
-        ? '✅ อัปโหลดข้อมูลทั้งหมดในเครื่องนี้ขึ้น Cloud เรียบร้อยแล้ว! อุปกรณ์อื่นที่ใช้บัญชีเดียวกันจะได้รับข้อมูลตรงกันทันที'
-        : '❌ ไม่สามารถอัปโหลดข้อมูลขึ้น Cloud ได้ กรุณาตรวจสอบการเชื่อมต่อ';
+        ? 'Upload complete. Other devices on the same account will receive the same data.'
+        : 'Could not upload to the cloud. Please check the connection.';
     }
   }
 }
@@ -4791,7 +4798,7 @@ function parseRawFirebaseConfig() {
   if (!raw) {
     if (alertBox) {
       alertBox.className = 'alert alert-warning';
-      alertBox.textContent = 'กรุณาวางโค้ด Firebase Configuration ในช่องข้อความก่อนกดแยกข้อมูล';
+      alertBox.textContent = 'Paste your Firebase config in the text box first.';
       alertBox.style.display = 'block';
     }
     return;
@@ -4821,10 +4828,10 @@ function parseRawFirebaseConfig() {
   if (filledCount > 0) {
     if (alertBox) {
       alertBox.className = 'alert alert-success';
-      alertBox.textContent = `✅ แยกและกรอกข้อมูลสำเร็จ ${filledCount} รายการ! กรุณาตรวจสอบและกด "⚡ ทดสอบการเชื่อมต่อ" ก่อนบันทึก`;
+      alertBox.textContent = `Filled ${filledCount} fields. Check them and press "Test connection" before saving.`;
       alertBox.style.display = 'block';
     }
-    showToastNotification(`✨ แยกข้อมูลคอนฟิกสำเร็จ ${filledCount} รายการ!`);
+    showToastNotification(`Parsed ${filledCount} config fields`);
   } else {
     // ลองแปลงแบบ JSON โดยตรง
     try {
@@ -4842,14 +4849,14 @@ function parseRawFirebaseConfig() {
     if (filledCount > 0) {
       if (alertBox) {
         alertBox.className = 'alert alert-success';
-        alertBox.textContent = `✅ แยกและกรอกข้อมูลสำเร็จ ${filledCount} รายการ!`;
+        alertBox.textContent = `Filled ${filledCount} fields`;
         alertBox.style.display = 'block';
       }
-      showToastNotification(`✨ แยกข้อมูลคอนฟิกสำเร็จ ${filledCount} รายการ!`);
+      showToastNotification(`Parsed ${filledCount} config fields`);
     } else {
       if (alertBox) {
         alertBox.className = 'alert alert-danger';
-        alertBox.textContent = '❌ ไม่สามารถแยกข้อมูลจากข้อความที่วางได้ กรุณาตรวจสอบรูปแบบ หรือกรอกข้อมูลลงในช่องโดยตรง';
+        alertBox.textContent = 'Could not parse the pasted text. Check the format or fill the fields manually.';
         alertBox.style.display = 'block';
       }
     }
@@ -4873,7 +4880,7 @@ async function testFirebaseConfigFromModal() {
   if (!projectId || !apiKey) {
     if (alertBox) {
       alertBox.className = 'alert alert-danger';
-      alertBox.textContent = '⚠️ กรุณาระบุ Project ID และ API Key ก่อนทดสอบการเชื่อมต่อ';
+      alertBox.textContent = 'Enter a Project ID and API key before testing.';
       alertBox.style.display = 'block';
     }
     return;
@@ -4883,21 +4890,21 @@ async function testFirebaseConfigFromModal() {
 
   if (btnTest) {
     btnTest.disabled = true;
-    btnTest.innerHTML = '⏳ กำลังทดสอบเชื่อมต่อ...';
+    btnTest.innerHTML = 'Testing…';
   }
   if (alertBox) {
     alertBox.className = 'alert alert-info';
-    alertBox.textContent = '⏳ กำลังเชื่อมต่อไปยังเซิร์ฟเวอร์ Firebase... กรุณารอสักครู่';
+    alertBox.textContent = 'Connecting to Firebase…';
     alertBox.style.display = 'block';
   }
 
   const res = (typeof testFirebaseConnection === 'function') 
     ? await testFirebaseConnection(cfg) 
-    : { success: false, error: 'ฟังก์ชันทดสอบไม่พร้อมใช้งาน' };
+    : { success: false, error: 'Test function unavailable' };
 
   if (btnTest) {
     btnTest.disabled = false;
-    btnTest.innerHTML = '⚡ ทดสอบการเชื่อมต่อ';
+    btnTest.innerHTML = 'Test connection';
   }
 
   if (res.success) {
@@ -4906,14 +4913,14 @@ async function testFirebaseConfigFromModal() {
       alertBox.textContent = `🟢 ${res.message}`;
       alertBox.style.display = 'block';
     }
-    showToastNotification(`🟢 เชื่อมต่อเซิร์ฟเวอร์ "${projectId}" สำเร็จ!`);
+    showToastNotification(`Connected to "${projectId}"`);
   } else {
     if (alertBox) {
       alertBox.className = 'alert alert-danger';
       alertBox.textContent = `❌ ${res.error}`;
       alertBox.style.display = 'block';
     }
-    showToastNotification(`❌ การเชื่อมต่อล้มเหลว`);
+    showToastNotification(`Connection failed`);
   }
 }
 
@@ -4934,7 +4941,7 @@ async function saveFirebaseConfigFromModal() {
   if (!projectId || !apiKey) {
     if (alertBox) {
       alertBox.className = 'alert alert-danger';
-      alertBox.textContent = '⚠️ กรุณาระบุ Project ID และ API Key ให้ครบถ้วน';
+      alertBox.textContent = 'Please enter both Project ID and API key.';
       alertBox.style.display = 'block';
     }
     return;
@@ -4944,7 +4951,7 @@ async function saveFirebaseConfigFromModal() {
 
   if (btnSave) {
     btnSave.disabled = true;
-    btnSave.innerHTML = '⏳ กำลังเชื่อมต่อ...';
+    btnSave.innerHTML = 'Connecting…';
   }
 
   if (typeof reinitFirebaseWithNewConfig === 'function') {
@@ -4955,20 +4962,20 @@ async function saveFirebaseConfigFromModal() {
 
   if (btnSave) {
     btnSave.disabled = false;
-    btnSave.innerHTML = '💾 บันทึกและเชื่อมต่อเซิร์ฟเวอร์';
+    btnSave.innerHTML = 'Save & connect';
   }
 
   closeFirebaseConfigModal();
   updateNavbarAuthUI(currentUser, isFirebaseOnline);
-  showSuccessPopup('เชื่อมต่อสำเร็จ', `บันทึกและเชื่อมต่อเซิร์ฟเวอร์ Firebase (${projectId}) พร้อมซิงก์ข้อมูลเรียบร้อยแล้ว`);
-  showToastNotification(`🔥 เชื่อมต่อเซิร์ฟเวอร์ Firebase (${projectId}) สำเร็จ!`);
+  showSuccessPopup('Connected', `Firebase (${projectId}) is connected and syncing.`);
+  showToastNotification(`Connected to Firebase (${projectId})`);
 }
 
 /**
  * คืนค่าการตั้งค่าเซิร์ฟเวอร์กลับเป็นโหมดเริ่มต้น (Local Storage ออฟไลน์)
  */
 async function resetFirebaseConfigDefault() {
-  if (confirm('คุณต้องการรีเซ็ตเซิร์ฟเวอร์ Firebase กลับเป็นโหมดเริ่มต้น (Local Storage ออฟไลน์) หรือไม่?')) {
+  if (confirm('Reset Firebase to the default (offline local storage)?')) {
     if (typeof resetFirebaseConfigToDefault === 'function') {
       await resetFirebaseConfigToDefault();
     } else {
@@ -4976,8 +4983,8 @@ async function resetFirebaseConfigDefault() {
     }
     closeFirebaseConfigModal();
     updateNavbarAuthUI(currentUser, isFirebaseOnline);
-    showSuccessPopup('คืนค่าสำเร็จ', 'รีเซ็ตกลับเป็นโหมด Local Storage ออฟไลน์เรียบร้อยแล้ว');
-    showToastNotification('🔄 รีเซ็ตกลับเป็นโหมด Local เรียบร้อยแล้ว');
+    showSuccessPopup('Reset', 'Now using offline local storage.');
+    showToastNotification('Switched to local mode');
   }
 }
 
@@ -4986,7 +4993,7 @@ async function resetFirebaseConfigDefault() {
 // ==========================================================================
 let successPopupTimer = null;
 
-function showSuccessPopup(title = 'บันทึกสำเร็จ', message = 'บันทึกข้อมูลเรียบร้อยแล้ว', callback = null) {
+function showSuccessPopup(title = 'Saved', message = 'Your changes have been saved.', callback = null) {
   const modal = document.getElementById('successConfirmModal');
   const titleEl = document.getElementById('successPopupTitle');
   const msgEl = document.getElementById('successPopupMessage');
@@ -5157,7 +5164,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   if (window._justImportedFbConfigFromUrl) {
     setTimeout(() => {
-      showToastNotification(`🔥 เชื่อมต่อ Firebase (${window._justImportedFbConfigFromUrl}) และซิงก์ข้อมูลเข้ามือถือสำเร็จ!`);
+      showToastNotification(`Connected to Firebase (${window._justImportedFbConfigFromUrl}) and synced`);
     }, 500);
   }
 });
@@ -5318,7 +5325,7 @@ function toggleSimulatorOrientation() {
   simIsLandscape = !simIsLandscape;
   const textEl = document.getElementById('simOrientationText');
   if (textEl) {
-    textEl.textContent = simIsLandscape ? 'แนวนอน' : 'แนวตั้ง';
+    textEl.textContent = simIsLandscape ? 'Landscape' : 'Portrait';
   }
   applySimulatorDeviceAndScale();
 }

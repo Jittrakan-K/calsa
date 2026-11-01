@@ -25,7 +25,7 @@ const DEFAULT_SYSTEM_USERS = [
   {
     id: 'user_admin',
     name: 'JITTRAKAN K.',
-    companyName: 'CACULATION SALARY',
+    companyName: 'CALSA',
     empCode: '20523',
     department: 'PRODUCTION TECHNOLOGY',
     pin: '20523',
@@ -143,7 +143,7 @@ function getAllSystemUsers(internalBypass = false) {
           modified = true;
         }
         if (!adminUser.companyName || !String(adminUser.companyName).trim()) {
-          adminUser.companyName = 'CACULATION SALARY';
+          adminUser.companyName = 'CALSA';
           modified = true;
         }
         if (!adminUser.empCode || !String(adminUser.empCode).trim()) {
@@ -190,7 +190,7 @@ function getAllSystemUsers(internalBypass = false) {
             }
           }
           if (!u.companyName) {
-            u.companyName = 'CACULATION SALARY';
+            u.companyName = 'CALSA';
             modified = true;
           } else {
             u.companyName = u.companyName.toUpperCase();
@@ -252,7 +252,7 @@ function clearAllStaffUsers() {
   const adminUser = {
     id: 'user_admin',
     name: currentAdmin.name || 'JITTRAKAN K.',
-    companyName: currentAdmin.companyName || 'CACULATION SALARY',
+    companyName: currentAdmin.companyName || 'CALSA',
     empCode: currentAdmin.empCode || '20523',
     department: currentAdmin.department || 'PRODUCTION TECHNOLOGY',
     pin: currentAdmin.pin || '20523',
@@ -335,12 +335,12 @@ function getActiveEditingUser() {
  */
 async function loginWithPin(pin) {
   if (!pin) {
-    return { success: false, error: 'กรุณาระบุรหัส PIN' };
+    return { success: false, error: 'Please enter your PIN.' };
   }
 
   const cleanPin = String(pin).trim();
   if (cleanPin.length < 4 || cleanPin.length > 8) {
-    return { success: false, error: 'รหัส PIN ต้องมีความยาว 4–8 หลัก' };
+    return { success: false, error: 'PIN must be 4–8 digits.' };
   }
 
   // หากเชื่อมต่อ Firebase ออนไลน์อยู่ ให้ดึงรายชื่อผู้ใช้ล่าสุดจาก Cloud ก่อนตรวจสอบ PIN
@@ -362,7 +362,7 @@ async function loginWithPin(pin) {
   if (!foundUser) {
     return { 
       success: false, 
-      error: 'รหัส PIN ไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง' 
+      error: 'Incorrect PIN. Please try again.' 
     };
   }
 
@@ -386,22 +386,22 @@ async function loginWithPin(pin) {
 /**
  * เพิ่มผู้ใช้งานใหม่ (เฉพาะ Admin)
  */
-function registerNewUser(name, pin, role = 'user', department = '', companyName = 'CACULATION SALARY', empCode = '') {
+function registerNewUser(name, pin, role = 'user', department = '', companyName = 'CALSA', empCode = '') {
   if (currentUser && currentUser.role !== 'admin') {
-    return { success: false, error: 'เฉพาะผู้ดูแลระบบ (ADMIN: JITTRAKAN K.) เท่านั้นที่สามารถเพิ่มผู้ใช้ได้' };
+    return { success: false, error: 'Only the admin (JITTRAKAN K.) can add users.' };
   }
   if (!name || !name.trim()) {
-    return { success: false, error: 'กรุณาระบุชื่อพนักงาน' };
+    return { success: false, error: 'Please enter the employee name.' };
   }
 
   const cleanPin = String(pin).trim();
   if (!/^\d{4,8}$/.test(cleanPin)) {
-    return { success: false, error: 'รหัส PIN ต้องเป็นตัวเลข 4–8 หลักเท่านั้น' };
+    return { success: false, error: 'PIN must be 4–8 digits.' };
   }
 
   const users = getAllSystemUsers(true);
   if (users.some(u => u.pin === cleanPin)) {
-    return { success: false, error: 'รหัส PIN นี้ถูกใช้งานแล้ว กรุณาเลือกรหัสอื่น' };
+    return { success: false, error: 'This PIN is already in use. Please choose another.' };
   }
 
   // สิทธิ์ของพนักงานใหม่ต้องเป็น 'user' เสมอ (Admin มีแค่ JITTRAKAN K. เท่านั้น)
@@ -411,9 +411,9 @@ function registerNewUser(name, pin, role = 'user', department = '', companyName 
     pin: cleanPin,
     role: 'user',
     avatar: '👤',
-    companyName: (companyName || 'CACULATION SALARY').trim().toUpperCase(),
+    companyName: (companyName || 'CALSA').trim().toUpperCase(),
     empCode: (empCode || ('EMP-' + cleanPin)).trim().toUpperCase(),
-    department: department.trim() || 'แผนกทั่วไป',
+    department: department.trim() || 'General',
     createdAt: new Date().toISOString()
   };
 
@@ -429,24 +429,24 @@ function registerNewUser(name, pin, role = 'user', department = '', companyName 
 function updateSystemUser(userId, updateData) {
   // สิทธิ์: ถ้าไม่ใช่ Admin และกำลังจะแก้ไข id คนอื่น ให้ปฏิเสธทันที
   if (currentUser && currentUser.role !== 'admin' && currentUser.id !== userId) {
-    return { success: false, error: 'คุณไม่มีสิทธิ์แก้ไขข้อมูลบัญชีของผู้อื่น' };
+    return { success: false, error: 'You cannot edit another user\'s account.' };
   }
 
   const users = getAllSystemUsers(true);
   const idx = users.findIndex(u => u.id === userId);
   if (idx === -1) {
-    return { success: false, error: 'ไม่พบผู้ใช้นี้ในระบบ' };
+    return { success: false, error: 'User not found.' };
   }
 
   // ตรวจสอบ PIN ซ้ำ (ถ้ามีการเปลี่ยน PIN)
   if (updateData.pin !== undefined && updateData.pin !== null && updateData.pin !== '') {
     const cleanPin = String(updateData.pin).trim();
     if (!/^\d{4,8}$/.test(cleanPin)) {
-      return { success: false, error: 'รหัส PIN ต้องเป็นตัวเลข 4–8 หลัก' };
+      return { success: false, error: 'PIN must be 4–8 digits.' };
     }
     const pinOwner = users.find(u => u.pin === cleanPin && u.id !== userId);
     if (pinOwner) {
-      return { success: false, error: 'รหัส PIN นี้ถูกใช้โดยพนักงานคนอื่นแล้ว' };
+      return { success: false, error: 'This PIN is already used by another employee.' };
     }
     users[idx].pin = cleanPin;
   }
@@ -455,6 +455,7 @@ function updateSystemUser(userId, updateData) {
   if (updateData.department !== undefined) users[idx].department = updateData.department.trim();
   if (updateData.companyName !== undefined) users[idx].companyName = updateData.companyName.trim().toUpperCase();
   if (updateData.empCode !== undefined) users[idx].empCode = updateData.empCode.trim().toUpperCase();
+  if (updateData.photo !== undefined) users[idx].photo = updateData.photo || '';
 
   // บังคับบทบาท: เฉพาะ user_admin เท่านั้นที่เป็น admin ที่เหลือทุกคนเป็น user
   if (users[idx].id === 'user_admin') {
@@ -488,10 +489,10 @@ function updateCurrentAccountProfile(profileData) {
  */
 function deleteSystemUser(userId) {
   if (currentUser && currentUser.role !== 'admin') {
-    return { success: false, error: 'เฉพาะผู้ดูแลระบบ (ADMIN: JITTRAKAN K.) เท่านั้นที่สามารถลบผู้ใช้ได้' };
+    return { success: false, error: 'Only the admin (JITTRAKAN K.) can delete users.' };
   }
   if (userId === 'user_admin') {
-    return { success: false, error: 'ไม่สามารถลบบัญชี ADMIN หลัก (JITTRAKAN K.) ได้' };
+    return { success: false, error: 'The main admin account (JITTRAKAN K.) cannot be deleted.' };
   }
 
   let users = getAllSystemUsers(true);
@@ -651,10 +652,10 @@ function generateFirebaseSyncUrl(cfg = null) {
  */
 async function testFirebaseConnection(cfg) {
   if (!cfg || !cfg.projectId || !cfg.apiKey) {
-    return { success: false, error: 'กรุณาระบุ Project ID และ API Key ให้ครบถ้วนก่อนทดสอบ' };
+    return { success: false, error: 'Enter both Project ID and API key before testing.' };
   }
   if (typeof firebase === 'undefined' || !firebase.initializeApp) {
-    return { success: false, error: 'ไม่พบไลบรารี Firebase SDK บนเบราว์เซอร์' };
+    return { success: false, error: 'Firebase SDK not found in this browser.' };
   }
 
   const testAppName = 'test_conn_' + Date.now();
@@ -664,7 +665,7 @@ async function testFirebaseConnection(cfg) {
     const testDb = testApp.firestore();
 
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('การเชื่อมต่อหมดเวลา (Timeout) กรุณาตรวจสอบอินเทอร์เน็ตหรือ Project ID')), 8000)
+      setTimeout(() => reject(new Error('Connection timed out. Check your internet or Project ID.')), 8000)
     );
 
     const testPromise = testDb.collection('app_system').doc('ping').set({
@@ -677,7 +678,7 @@ async function testFirebaseConnection(cfg) {
     try { await testApp.delete(); } catch(e) {}
     return { 
       success: true, 
-      message: `เชื่อมต่อเซิร์ฟเวอร์ Firebase "${cfg.projectId}" สำเร็จ! สามารถเขียนและอ่านฐานข้อมูล Firestore ได้ตามปกติ` 
+      message: `Connected to Firebase "${cfg.projectId}". Firestore read/write OK.` 
     };
   } catch (err) {
     if (testApp) {
@@ -687,10 +688,10 @@ async function testFirebaseConnection(cfg) {
     if (err.code === 'permission-denied' || String(err.message).toLowerCase().includes('permission')) {
       return { 
         success: true, 
-        message: `เชื่อมต่อเซิร์ฟเวอร์ Firebase "${cfg.projectId}" สำเร็จ! (พบเซิร์ฟเวอร์เรียบร้อย แต่อาจมีข้อจำกัดด้าน Firestore Security Rules)` 
+        message: `Connected to Firebase "${cfg.projectId}" (server found, but Firestore security rules may restrict access).` 
       };
     }
-    return { success: false, error: `เชื่อมต่อไม่สำเร็จ: ${err.message || err}` };
+    return { success: false, error: `Connection failed: ${err.message || err}` };
   }
 }
 
@@ -896,13 +897,13 @@ async function pushAllLocalDataToCloud(userId = null, silent = true) {
       }
     }
     if (!silent && typeof showToastNotification === 'function') {
-      showToastNotification('☁️ อัปโหลดข้อมูลทั้งหมดขึ้น Cloud สำเร็จ!');
+      showToastNotification('All data uploaded to the cloud');
     }
     return true;
   } catch (err) {
     console.warn('pushAllLocalDataToCloud error:', err.message);
     if (!silent && typeof showToastNotification === 'function') {
-      showToastNotification('⚠️ อัปโหลดข้อมูลขึ้น Cloud ไม่สำเร็จ: ' + err.message);
+      showToastNotification('Cloud upload failed: ' + err.message);
     }
     return false;
   }
@@ -962,7 +963,7 @@ async function pullAllUserDataFromCloud(userId = null, silent = true) {
         // อัปโหลดส่วนที่อาจมีเฉพาะในเครื่อง (เช่น บริษัทหรือข้อมูลที่ยังไม่เคยขึ้น Cloud) กลับไปผสานด้วย
         await pushAllLocalDataToCloud(targetId, true);
         if (!silent && typeof showToastNotification === 'function') {
-          showToastNotification('☁️ ซิงก์ข้อมูลล่าสุดจาก Cloud เรียบร้อยแล้ว!');
+          showToastNotification('Synced latest data from the cloud');
         }
         return true;
       }
@@ -971,13 +972,13 @@ async function pullAllUserDataFromCloud(userId = null, silent = true) {
     // หากบน Cloud ยังไม่มีข้อมูลของ User นี้เลย ให้อัปโหลดข้อมูลในเครื่องขึ้นไปเป็นค่าเริ่มต้นบน Cloud
     await pushAllLocalDataToCloud(targetId, true);
     if (!silent && typeof showToastNotification === 'function') {
-      showToastNotification('☁️ ซิงก์ข้อมูลเริ่มต้นขึ้น Cloud เรียบร้อยแล้ว!');
+      showToastNotification('Initial data synced to the cloud');
     }
     return true;
   } catch (err) {
     console.warn('pullAllUserDataFromCloud error:', err.message);
     if (!silent && typeof showToastNotification === 'function') {
-      showToastNotification('⚠️ ดึงข้อมูลจาก Cloud ไม่สำเร็จ: ' + err.message);
+      showToastNotification('Cloud pull failed: ' + err.message);
     }
     return false;
   }
