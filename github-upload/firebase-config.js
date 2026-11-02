@@ -272,7 +272,7 @@ function clearAllStaffUsers() {
 function saveSystemUsers(users) {
   try {
     localStorage.setItem(STORAGE_KEY_USERS_LIST, JSON.stringify(users));
-    if (isFirebaseOnline && firebaseDb) {
+    if (isFirebaseOnline && firebaseDb && _cloudInitialPullDone) {
       firebaseDb.collection('app_system').doc('users_directory').set({
         users: users,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -800,6 +800,9 @@ function checkStoredCurrentUser() {
 var _activeCloudUnsubscribe = null;
 var _activeUsersUnsubscribe = null;
 var _isApplyingCloudSnapshot = false;
+// Cloud writes stay off until this device has pulled the latest cloud data once,
+// so a device opened with old local data can't overwrite newer cloud data.
+var _cloudInitialPullDone = false;
 
 /**
  * หยุดการซิงก์แบบเรียลไทม์ชั่วคราว
@@ -961,6 +964,7 @@ async function pullAllUserDataFromCloud(userId = null, silent = true) {
           _isApplyingCloudSnapshot = false;
         }
         // อัปโหลดส่วนที่อาจมีเฉพาะในเครื่อง (เช่น บริษัทหรือข้อมูลที่ยังไม่เคยขึ้น Cloud) กลับไปผสานด้วย
+        _cloudInitialPullDone = true;
         await pushAllLocalDataToCloud(targetId, true);
         if (!silent && typeof showToastNotification === 'function') {
           showToastNotification('Synced latest data from the cloud');
@@ -970,6 +974,7 @@ async function pullAllUserDataFromCloud(userId = null, silent = true) {
     }
 
     // หากบน Cloud ยังไม่มีข้อมูลของ User นี้เลย ให้อัปโหลดข้อมูลในเครื่องขึ้นไปเป็นค่าเริ่มต้นบน Cloud
+    _cloudInitialPullDone = true;
     await pushAllLocalDataToCloud(targetId, true);
     if (!silent && typeof showToastNotification === 'function') {
       showToastNotification('Initial data synced to the cloud');
@@ -987,10 +992,41 @@ async function pullAllUserDataFromCloud(userId = null, silent = true) {
 /**
  * ซิงก์ข้อมูลแบบสมบูรณ์ (ดึงจาก Cloud + ผสานข้อมูลในเครื่อง + เริ่มฟังการเปลี่ยนแปลงเรียลไทม์)
  */
+var _cloudRetryTimer = null;
+var _cloudRetryDelay = 5000;
 async function syncAllDataWithCloud(userId = null, silent = true) {
   const ok = await pullAllUserDataFromCloud(userId, silent);
   startRealtimeCloudSync(userId);
+  // If the first pull failed (e.g. weak signal), keep retrying so this device
+  // starts syncing as soon as the connection is back.
+  clearTimeout(_cloudRetryTimer);
+  if (!ok && !_cloudInitialPullDone && isFirebaseOnline) {
+    _cloudRetryTimer = setTimeout(() => syncAllDataWithCloud(userId, true), _cloudRetryDelay);
+    _cloudRetryDelay = Math.min(_cloudRetryDelay * 2, 60000);
+  } else {
+    _cloudRetryDelay = 5000;
+  }
   return ok;
+}
+
+// Re-sync when the app comes back to the foreground or the network returns
+// (phones pause background tabs, so they can miss live updates).
+var _lastResyncAt = 0;
+function resyncWithCloudSoon() {
+  if (!isFirebaseOnline || !firebaseDb) return;
+  const now = Date.now();
+  if (now - _lastResyncAt < 3000) return;
+  _lastResyncAt = now;
+  syncAllDataWithCloud(null, true);
+}
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') resyncWithCloudSoon();
+  });
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', resyncWithCloudSoon);
+  window.addEventListener('pageshow', (e) => { if (e.persisted) resyncWithCloudSoon(); });
 }
 
 /**
@@ -1002,6 +1038,7 @@ async function syncDataToCloud(docKey, data, userId = null) {
   }
   if (_isApplyingCloudSnapshot) return false;
   if (!isFirebaseOnline || !firebaseDb) return false;
+  if (!_cloudInitialPullDone) return false; // wait for the first pull so stale local data can't overwrite the cloud
   const targetId = userId || getActiveEditingUserId();
   const docRef = firebaseDb.collection('user_salaries').doc(targetId);
   try {
