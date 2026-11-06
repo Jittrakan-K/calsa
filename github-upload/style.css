@@ -1922,64 +1922,32 @@ h1, h2, h3, h4, h5 { letter-spacing: 0; }
 .modal-close:hover .ic-x { transform: rotate(90deg); }
 .ic-x { transition: transform .2s ease; }
 
-/* ===== Splash / loading screen ===== */
-#calsaSplash { position: fixed; inset: 0; z-index: 99999; pointer-events: all; }
-#calsaSplash.cs-exit { pointer-events: none; }
-.cs-stage, .cs-curtain { position: absolute; inset: 0; }
-.cs-stage {
-  overflow: hidden; display: grid; place-items: center;
-  background: radial-gradient(900px 600px at 50% 40%, #2A36A8 0%, #1B2479 45%, #0E1450 100%);
-  transition: transform 1s cubic-bezier(.76,0,.24,1);
+/* ===== Splash / loading screen =====
+   Modelled on the orbray.co.th loader: dark slate cover, a thin ring
+   with one blue arc, and the wordmark set in a Garamond serif. */
+#calsaSplash {
+  position: fixed; inset: 0; z-index: 99999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+  background: #2B3244;
+  transition: opacity .5s ease, visibility 0s linear .5s;
 }
-.cs-curtain-2 { background: #77AFD8; transition: transform 1.1s cubic-bezier(.76,0,.24,1) .08s; }
-.cs-exit .cs-stage { transform: translateY(-100%); }
-.cs-exit .cs-curtain-2 { transform: translateY(-100%); }
-.cs-exit .cs-center { transform: translateY(-40px); opacity: 0; transition: transform .7s cubic-bezier(.76,0,.24,1), opacity .5s; }
-
-.cs-grid { position: absolute; inset: -50%; background-image: linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px); background-size: 56px 56px; transform: perspective(700px) rotateX(58deg) translateY(10%); transform-origin: center; mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 55%); -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 0%, transparent 55%); animation: cs-gridmove 6s linear infinite; }
-.cs-orb { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .55; }
-.cs-orb-1 { width: 420px; height: 420px; background: #77AFD8; left: -120px; top: -100px; animation: cs-float 7s ease-in-out infinite; }
-.cs-orb-2 { width: 520px; height: 520px; background: #3F4FD6; right: -180px; bottom: -200px; animation: cs-float 9s ease-in-out infinite reverse; }
-.cs-orb-3 { width: 220px; height: 220px; background: #B9DAF2; right: 22%; top: 18%; opacity: .25; animation: cs-float 6s ease-in-out infinite; }
-
-.cs-center { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; }
-.cs-mark { position: relative; width: 84px; height: 84px; border-radius: 26px; display: grid; place-items: center; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.25); backdrop-filter: blur(10px); box-shadow: 0 20px 50px -18px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.25); animation: cs-pop .9s cubic-bezier(.2,.9,.3,1.25) both; }
-.cs-mark svg { width: 38px; height: 38px; overflow: visible; }
-.cs-bolt { fill: transparent; stroke: #fff; stroke-width: 1.4; stroke-linejoin: round; stroke-dasharray: 70; stroke-dashoffset: 70; animation: cs-draw .9s ease .35s forwards, cs-fill .4s ease 1.15s forwards; filter: drop-shadow(0 0 8px rgba(119,175,216,.9)); }
-.cs-pulse { position: absolute; inset: 0; border-radius: 26px; border: 1.5px solid rgba(119,175,216,.7); animation: cs-ring 2s ease-out 1.1s infinite; opacity: 0; }
-.cs-pulse-2 { animation-delay: 1.6s; }
-
-.cs-word { margin-top: 30px; display: flex; gap: .06em; font-family: "Plus Jakarta Sans", system-ui, sans-serif; font-weight: 800; font-size: clamp(3rem, 9vw, 5.6rem); letter-spacing: .14em; line-height: 1; padding-left: .14em; }
-.cs-word span { display: inline-block; overflow: hidden; padding: .04em 0 .08em; }
-.cs-word i { display: inline-block; font-style: normal; transform: translateY(110%); animation: cs-rise .9s cubic-bezier(.2,.8,.2,1) forwards;
-  background: linear-gradient(100deg, #fff 0%, #fff 40%, #B9DAF2 50%, #fff 60%, #fff 100%); background-size: 300% 100%; background-position: 100% 0; -webkit-background-clip: text; background-clip: text; color: transparent; }
-.cs-word span:nth-child(1) i { animation-delay: .55s, 1.7s; }
-.cs-word span:nth-child(2) i { animation-delay: .62s, 1.75s; }
-.cs-word span:nth-child(3) i { animation-delay: .69s, 1.8s; }
-.cs-word span:nth-child(4) i { animation-delay: .76s, 1.85s; }
-.cs-word span:nth-child(5) i { animation-delay: .83s, 1.9s; background-image: linear-gradient(100deg, #77AFD8 0%, #77AFD8 40%, #fff 50%, #77AFD8 60%, #77AFD8 100%); }
-.cs-word i { animation-name: cs-rise, cs-shine; animation-duration: .9s, 1.2s; animation-timing-function: cubic-bezier(.2,.8,.2,1), ease; animation-fill-mode: forwards, forwards; }
-.cs-line { width: 0; height: 2px; margin-top: 22px; border-radius: 2px; background: linear-gradient(90deg, transparent, #77AFD8, transparent); animation: cs-grow .9s cubic-bezier(.2,.8,.2,1) 1.15s forwards; }
-.cs-tag { margin-top: 16px; font-size: .8rem; font-weight: 600; letter-spacing: .5em; text-transform: uppercase; color: rgba(255,255,255,.7); opacity: 0; animation: cs-track 1.1s cubic-bezier(.2,.8,.2,1) 1.3s forwards; }
-
-.cs-foot { position: absolute; left: 50%; bottom: 56px; transform: translateX(-50%); display: flex; align-items: center; gap: 14px; opacity: 0; animation: cs-fade .5s ease .5s forwards; }
-.cs-bar { width: 180px; height: 2px; background: rgba(255,255,255,.15); border-radius: 2px; overflow: hidden; }
-.cs-bar i { display: block; height: 100%; background: linear-gradient(90deg, #77AFD8, #fff); transform-origin: left; transform: scaleX(0); box-shadow: 0 0 10px #77AFD8; }
-.cs-pct { font-family: "Plus Jakarta Sans", system-ui, sans-serif; font-size: .78rem; font-weight: 700; color: rgba(255,255,255,.8); font-variant-numeric: tabular-nums; min-width: 38px; letter-spacing: .05em; }
-
-@keyframes cs-pop { from { opacity: 0; transform: scale(.4) rotate(-20deg); } to { opacity: 1; transform: none; } }
-@keyframes cs-draw { to { stroke-dashoffset: 0; } }
-@keyframes cs-fill { to { fill: #fff; } }
-@keyframes cs-ring { 0% { opacity: .9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.9); } }
-@keyframes cs-rise { to { transform: none; } }
-@keyframes cs-shine { from { background-position: 100% 0; } to { background-position: 0 0; } }
-@keyframes cs-grow { to { width: 220px; } }
-@keyframes cs-track { from { opacity: 0; letter-spacing: 1em; } to { opacity: 1; letter-spacing: .32em; } }
-@keyframes cs-fade { to { opacity: 1; } }
-@keyframes cs-float { 0%,100% { transform: translate(0,0); } 50% { transform: translate(40px, 30px); } }
-@keyframes cs-gridmove { from { background-position: 0 0; } to { background-position: 0 56px; } }
-@media (max-width: 480px) { .cs-tag { font-size: .66rem; } .cs-line { animation-name: cs-grow-s; } @keyframes cs-grow-s { to { width: 160px; } } }
-@media (prefers-reduced-motion: reduce) { #calsaSplash *, #calsaSplash *::before { animation-duration: .01s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; } }
+#calsaSplash.cs-hide { opacity: 0; visibility: hidden; }
+.cs-spinner {
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, .16);
+  border-top-color: #77AFD8;
+  animation: cs-spin 1.2s linear infinite;
+}
+.cs-wordmark {
+  font-family: "EB Garamond", "Adobe Garamond Pro", Garamond, "Times New Roman", serif;
+  font-weight: 400; font-size: 48px; line-height: 1; letter-spacing: .04em;
+  color: #FFFFFF;
+  animation: cs-in .6s ease both;
+}
+@keyframes cs-spin { to { transform: rotate(360deg); } }
+@keyframes cs-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (max-width: 480px) { .cs-wordmark { font-size: 40px; } }
+@media (prefers-reduced-motion: reduce) { .cs-spinner { animation-duration: 2.4s; } .cs-wordmark { animation: none; } }
 @media print { #calsaSplash { display: none !important; } }
 
 /* ===== Hide amounts (eye toggle) ===== */

@@ -27,8 +27,8 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=11">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=EB+Garamond:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=12">
 
   <!-- Firebase SDK Compat via CDN -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -37,41 +37,18 @@
   <script src="firebase-config.js?v=10"></script>
 </head>
 <body>
-  <div id="calsaSplash" class="no-tc" aria-hidden="true">
-    <div class="cs-curtain cs-curtain-2"></div>
-    <div class="cs-stage">
-      <div class="cs-grid"></div>
-      <span class="cs-orb cs-orb-1"></span><span class="cs-orb cs-orb-2"></span><span class="cs-orb cs-orb-3"></span>
-      <div class="cs-center">
-        <div class="cs-mark">
-          <span class="cs-pulse"></span><span class="cs-pulse cs-pulse-2"></span>
-          <svg viewBox="0 0 24 24"><path class="cs-bolt" d="M13 2L4.5 13.5H11L10 22l8.5-11.5H12L13 2z"/></svg>
-        </div>
-        <div class="cs-word" aria-label="CALSA"><span><i>C</i></span><span><i>A</i></span><span><i>L</i></span><span><i>S</i></span><span><i>A</i></span></div>
-        <div class="cs-line"></div>
-        <div class="cs-tag">Salary Calculation · by Jittrakan K.</div>
-      </div>
-      <div class="cs-foot">
-        <div class="cs-bar"><i id="csBar"></i></div>
-        <div class="cs-pct"><span id="csPct">0</span>%</div>
-      </div>
-    </div>
+  <div id="calsaSplash" class="no-tc" role="status" aria-label="Loading CALSA">
+    <div class="cs-spinner" aria-hidden="true"></div>
+    <div class="cs-wordmark">CALSA</div>
   </div>
   <script>
     (function(){
-      var s=document.getElementById('calsaSplash'),bar=document.getElementById('csBar'),pct=document.getElementById('csPct');
-      var t0=performance.now(),MIN=2300,loaded=false,done=false,p=0;
-      window.addEventListener('load',function(){loaded=true});
-      if(document.readyState==='complete')loaded=true;
-      function tick(t){
-        var el=t-t0,x=Math.min(1,el/MIN),e=1-Math.pow(1-x,3);
-        p=loaded?e*100:Math.min(92,e*100);
-        bar.style.transform='scaleX('+(p/100)+')'; pct.textContent=Math.round(p);
-        if(p>=100&&!done){done=true;setTimeout(function(){s.classList.add('cs-exit');setTimeout(function(){s.remove()},1300)},250);return}
-        if(el>8000&&!done){loaded=true}
-        requestAnimationFrame(tick);
-      }
-      requestAnimationFrame(tick);
+      var s=document.getElementById('calsaSplash'),t0=Date.now(),done=false;
+      function hide(){ if(done)return; done=true;
+        var wait=Math.max(0,1200-(Date.now()-t0));
+        setTimeout(function(){ s.classList.add('cs-hide'); setTimeout(function(){ s.remove(); },500); },wait); }
+      if(document.readyState==='complete') hide(); else window.addEventListener('load',hide);
+      setTimeout(hide,6000);
     })();
   </script>
 <div class="app-shell">

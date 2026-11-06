@@ -1,0 +1,2099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#222C91">
+  <title>CALSA</title>
+
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png?v=2">
+  <link rel="shortcut icon" href="favicon.ico?v=2">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+  <script>
+    (function() {
+      if (window.location.protocol === 'file:') {
+        const link = document.createElement('link');
+        link.type = 'image/svg+xml';
+        link.rel = 'icon';
+        link.href = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8cmVjdCB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHJ4PSIxNiIgZmlsbD0iIzIyMkM5MSIvPgogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE0LCAxNCkgc2NhbGUoMS41KSI+CiAgICA8cGF0aCBkPSJNMTMgMkwzIDE0aDhsLTIgOCAxMC0xMmgtOGwyLTh6IiBmaWxsPSIjZmZmZmZmIi8+CiAgPC9nPgo8L3N2Zz4K';
+        document.head.appendChild(link);
+      }
+    })();
+    if (window.self !== window.top || window.location.search.includes('mode=mobile_sim')) {
+      document.documentElement.classList.add('is-in-simulator');
+    }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=11">
+
+  <!-- Firebase SDK Compat via CDN -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js?v=10"></script>
+</head>
+<body>
+  <div id="calsaSplash" class="no-tc" aria-hidden="true">
+    <div class="cs-curtain cs-curtain-2"></div>
+    <div class="cs-stage">
+      <div class="cs-grid"></div>
+      <span class="cs-orb cs-orb-1"></span><span class="cs-orb cs-orb-2"></span><span class="cs-orb cs-orb-3"></span>
+      <div class="cs-center">
+        <div class="cs-mark">
+          <span class="cs-pulse"></span><span class="cs-pulse cs-pulse-2"></span>
+          <svg viewBox="0 0 24 24"><path class="cs-bolt" d="M13 2L4.5 13.5H11L10 22l8.5-11.5H12L13 2z"/></svg>
+        </div>
+        <div class="cs-word" aria-label="CALSA"><span><i>C</i></span><span><i>A</i></span><span><i>L</i></span><span><i>S</i></span><span><i>A</i></span></div>
+        <div class="cs-line"></div>
+        <div class="cs-tag">Salary Calculation · by Jittrakan K.</div>
+      </div>
+      <div class="cs-foot">
+        <div class="cs-bar"><i id="csBar"></i></div>
+        <div class="cs-pct"><span id="csPct">0</span>%</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    (function(){
+      var s=document.getElementById('calsaSplash'),bar=document.getElementById('csBar'),pct=document.getElementById('csPct');
+      var t0=performance.now(),MIN=2300,loaded=false,done=false,p=0;
+      window.addEventListener('load',function(){loaded=true});
+      if(document.readyState==='complete')loaded=true;
+      function tick(t){
+        var el=t-t0,x=Math.min(1,el/MIN),e=1-Math.pow(1-x,3);
+        p=loaded?e*100:Math.min(92,e*100);
+        bar.style.transform='scaleX('+(p/100)+')'; pct.textContent=Math.round(p);
+        if(p>=100&&!done){done=true;setTimeout(function(){s.classList.add('cs-exit');setTimeout(function(){s.remove()},1300)},250);return}
+        if(el>8000&&!done){loaded=true}
+        requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    })();
+  </script>
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR (desktop) ============ -->
+  <aside class="sidebar no-print">
+    <div class="app-branding" onclick="switchView('main')">
+      <div class="brand-logo-mark">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M13 2L3 14h8l-2 8 10-12h-8l2-8z"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">CALSA</div>
+        <div class="brand-tag">by Jittrakan K.</div>
+      </div>
+    </div>
+
+    <div class="side-label">Main menu</div>
+    <nav class="nav-menu">
+      <button type="button" class="nav-link-btn active" id="navBtnMain" onclick="switchView('main')">
+        <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>
+        <span>Payroll</span>
+      </button>
+      <button type="button" class="nav-link-btn" id="navBtnAttendance" onclick="switchView('attendance')">
+        <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span>Attendance</span>
+      </button>
+      <button type="button" class="nav-link-btn" id="navBtnCalendar" onclick="toggleCalendarView()">
+        <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+        <span>Work calendar</span>
+      </button>
+    </nav>
+
+    <div class="side-label">Tools</div>
+    <nav class="nav-menu">
+      <button type="button" class="nav-link-btn" onclick="openSettingsSalaryModal()">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+        <span>Salary settings</span>
+      </button>
+      <button type="button" class="nav-link-btn" onclick="openManageCompaniesModal()">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg>
+        <span>Companies</span>
+      </button>
+      <button type="button" class="nav-link-btn" onclick="prepareAndPrint()">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>
+        <span>Print payslip</span>
+      </button>
+    </nav>
+
+    <div class="side-promo" onclick="openCalendarScanModal()">
+      <div class="side-promo-art" aria-hidden="true"></div>
+      <div class="side-promo-title">Scan your company<br>calendar with AI</div>
+      <span class="side-promo-link">Start scan
+        <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </span>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN COLUMN ============ -->
+  <div class="app-main">
+    <header class="topbar no-print">
+      <div class="topbar-row topbar-row-mobile">
+        <div class="app-branding" onclick="switchView('main')">
+          <div class="brand-logo-mark">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M13 2L3 14h8l-2 8 10-12h-8l2-8z"/></svg>
+          </div>
+          <div class="brand-text">
+            <div class="brand-name">CALSA</div>
+            <div class="brand-tag">by Jittrakan K.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="topbar-row topbar-controls">
+        <!-- Company -->
+        <div class="exec-brand-cluster">
+          <label class="pill-select pill-select-company" title="Select company">
+            <span class="pill-select-icon">
+              <svg class="ic" viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/></svg>
+            </span>
+            <select id="ribbonCompanySelect" class="exec-select-company" onchange="onRibbonCompanyChange(this.value)" title="Select company"></select>
+            <svg class="ic pill-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </label>
+          <div class="icon-btn-group">
+            <button type="button" class="icon-btn" onclick="openAddCompanyModal()" title="Add company">
+              <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <button type="button" class="icon-btn" onclick="openManageCompaniesModal()" title="Manage companies">
+              <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+            </button>
+            <button type="button" class="icon-btn" onclick="openCalendarScanModal()" title="Scan a calendar with AI">
+              <svg class="ic" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Period -->
+        <div class="exec-period-cluster">
+          <button type="button" class="icon-btn icon-btn-round" onclick="navPrevPeriod()" title="Previous period">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <label class="pill-select pill-select-period" title="Select payroll period">
+            <span class="pill-select-icon">
+              <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+            </span>
+            <select id="payrollPeriodSelect" class="exec-period-select" onchange="onPayrollPeriodSelectChange()"></select>
+            <svg class="ic pill-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </label>
+          <button type="button" class="icon-btn icon-btn-round" onclick="navNextPeriod()" title="Next period">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+
+        <!-- Year -->
+        <div class="exec-tools-cluster">
+          <label class="pill-select pill-select-year" title="Select year">
+            <select id="appYearSelect" class="exec-year-select" onchange="onAppYearChange()"></select>
+            <svg class="ic pill-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+          </label>
+          <button type="button" class="icon-btn" onclick="openAddYearModal()" title="Add calendar year">
+            <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M12 11v6M9 14h6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Auth area (rendered by JS) -->
+      <div id="navAuthArea" class="nav-auth-area">
+        <div class="factorium-auth-group">
+          <button type="button" class="btn-simulator-trigger" id="btnPhoneSimulator" onclick="openPhoneSimulator()" title="Phone preview">
+            <svg class="ic" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg>
+          </button>
+          <button type="button" class="btn-factorium-gradient" onclick="openAuthModal()">Sign in</button>
+        </div>
+      </div>
+
+      <!-- Preserved DOM IDs for JS Calculation Engine -->
+      <span id="heroTargetDays" style="display:none;">22</span>
+      <span id="heroTotalOTHours" style="display:none;">0.0</span>
+      <span id="heroNetPay" style="display:none;">0.00</span>
+    </header>
+
+    <main class="main-content">
+      <!-- ================= VIEW: SALARY OVERVIEW ================= -->
+      <section id="view-main" class="view-panel active-panel">
+        <div class="container">
+
+          <div id="adminScopeBanner" class="admin-scope-banner no-print" style="display:none;"></div>
+
+          <div class="page-head no-print">
+            <div>
+              <h1 class="page-title">Payroll overview</h1>
+              <p class="page-sub">Earnings, deductions and net pay for the selected period</p>
+            </div>
+          </div>
+
+          <!-- Hero: net pay + income / deduction -->
+          <div class="summary-cards-grid">
+            <div class="sum-card net-card balance-card">
+              <div class="balance-art" aria-hidden="true">
+                <span class="art-grid"></span>
+                <span class="art-orb"></span>
+              </div>
+              <div class="balance-top">
+                <span class="balance-label-row">
+                  <span class="balance-label">Net pay</span>
+                  <button type="button" class="eye-toggle" id="btnToggleAmounts" onclick="toggleAmountsHidden()" title="Hide amounts" aria-label="Hide amounts" aria-pressed="false">
+                    <svg class="eye-open" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg class="eye-closed" viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6A17.4 17.4 0 0 0 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+                  </button>
+                </span>
+                <span class="balance-period">
+                  <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+                  <span class="bp-label">Period</span><span class="bp-sep"></span><span id="netBoxPeriod">-</span>
+                </span>
+              </div>
+              <div class="balance-amount">
+                <span class="currency-symbol">฿</span><span class="card-amount" id="dashNetPay">0.00</span>
+              </div>
+              <div class="balance-meta">Pay date <span id="netBoxPayDate">-</span></div>
+              <div class="balance-actions no-print">
+                <button type="button" class="pill-lime" onclick="switchView('attendance')">
+                  <span class="pill-lime-ic"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+                  Attendance
+                </button>
+                <button type="button" class="pill-lime" onclick="openSettingsSalaryModal()">
+                  <span class="pill-lime-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></span>
+                  Salary settings
+                </button>
+                <button type="button" class="pill-lime pill-lime-round" onclick="prepareAndPrint()" title="Print payslip">
+                  <svg class="ic" viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="stat-stack">
+              <div class="sum-card income-card">
+                <span class="stat-ic ic-lime">
+                  <svg class="ic" viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></svg>
+                </span>
+                <div class="stat-body">
+                  <span class="card-title">Gross earnings</span>
+                  <div class="card-val-row"><span class="currency-symbol">฿</span><span class="card-amount" id="dashTotalIncome">0.00</span></div>
+                </div>
+                <span class="stat-tag">Income</span>
+              </div>
+              <div class="sum-card deduct-card">
+                <span class="stat-ic ic-rose">
+                  <svg class="ic" viewBox="0 0 24 24"><path d="M17 7L7 17M15 17H7V9"/></svg>
+                </span>
+                <div class="stat-body">
+                  <span class="card-title">Social security</span>
+                  <div class="card-val-row"><span class="currency-symbol">-฿</span><span class="card-amount" id="dashTotalDeduct">0.00</span></div>
+                </div>
+                <span class="stat-tag">Deduction</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Attendance KPIs -->
+          <div class="kpi-row no-print">
+            <div class="kpi-tile">
+              <span class="stat-ic ic-violet"><svg class="ic" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M16 11l2 2 4-4"/></svg></span>
+              <div>
+                <div class="kpi-tile-label">Days worked</div>
+                <div class="kpi-tile-val"><strong id="quickCameDays">0</strong><span class="kpi-tile-unit">/ <span id="quickTargetDays">0</span> days</span></div>
+              </div>
+            </div>
+            <div class="kpi-tile">
+              <span class="stat-ic ic-amber"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+              <div>
+                <div class="kpi-tile-label">Overtime hours</div>
+                <div class="kpi-tile-val"><strong id="quickTotalOTHours">0.0</strong><span class="kpi-tile-unit">h</span></div>
+              </div>
+            </div>
+            <div class="kpi-tile">
+              <span class="stat-ic ic-sky"><svg class="ic" viewBox="0 0 24 24"><path d="M12 2l3 6.3 7 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 7-1z"/></svg></span>
+              <div>
+                <div class="kpi-tile-label">OT days</div>
+                <div class="kpi-tile-val"><strong id="quickTotalOTDays">0</strong><span class="kpi-tile-unit">days</span></div>
+              </div>
+            </div>
+            <button type="button" class="kpi-tile kpi-tile-action" onclick="switchView('attendance')">
+              <span>Open timesheet</span>
+              <span class="kpi-arrow"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+            </button>
+          </div>
+
+          <!-- Breakdown -->
+          <div class="card salary-breakdown-card">
+            <div class="card-header-flex">
+              <div>
+                <div class="card-title-row">
+                  <h2 class="card-header-title">Earnings & deductions</h2>
+                  <span class="card-paydate-badge" id="cardPeriodBadge">-</span>
+                  <span id="cardPeriodConfigStatusBadge" style="display: none !important;"></span>
+                </div>
+                <p class="subtitle" id="cardPeriodSubtitle">Calculated from attendance using your salary structure</p>
+              </div>
+              <div class="card-header-actions no-print">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openSettingsSalaryModal()" title="Edit salary, allowances and OT rates">
+                  <svg class="ic" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+                  <span>Adjust rates</span>
+                </button>
+                <span id="cardPayDateDisplay" style="display: none !important;"></span>
+              </div>
+            </div>
+
+            <div class="salary-calc-grid">
+              <!-- Earnings -->
+              <div class="calc-col">
+                <h3 class="calc-col-title"><span class="dot dot-violet"></span>Regular earnings</h3>
+                <div class="txn-list">
+                  <div class="txn-row">
+                    <span class="txn-ic ic-violet"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="3"/><circle cx="12" cy="12" r="2.5"/></svg></span>
+                    <div class="txn-body">
+                      <div class="txn-title txn-title-badge"><span>Base salary</span><span id="calcDiligenceStatus">Full attendance</span></div>
+                      <div class="txn-sub">Worked <span id="calcCameDays">0</span> / <span id="calcTargetDays">0</span> days</div>
+                    </div>
+                    <div class="txn-amt" id="calcActualSalary">0.00</div>
+                  </div>
+                  <div class="txn-row">
+                    <span class="txn-ic ic-lime"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M8.5 14.5L7 22l5-3 5 3-1.5-7.5"/></svg></span>
+                    <div class="txn-body">
+                      <div class="txn-title">Diligence allowance</div>
+                      <div class="txn-sub" id="lblDiligenceSubtitle">Full calendar attendance (rate ฿<span id="lblRateDiligence">650</span>)</div>
+                    </div>
+                    <div class="txn-amt" id="calcDiligenceTotal">0.00</div>
+                  </div>
+                  <div class="txn-row">
+                    <span class="txn-ic ic-sky"><svg class="ic" viewBox="0 0 24 24"><path d="M5 17h14M6 17l1.5-6h9L18 17M8 11l1-4h6l1 4"/><circle cx="7.5" cy="19" r="1.5"/><circle cx="16.5" cy="19" r="1.5"/></svg></span>
+                    <div class="txn-body">
+                      <div class="txn-title">Travel allowance</div>
+                      <div class="txn-sub">Fixed monthly</div>
+                    </div>
+                    <div class="txn-amt" id="calcTravelTotal">0.00</div>
+                  </div>
+                  <div class="txn-row">
+                    <span class="txn-ic ic-amber"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11h18a9 9 0 0 1-18 0zM12 3v4M8 5v2M16 5v2"/></svg></span>
+                    <div class="txn-body">
+                      <div class="txn-title" id="lblFoodTitle">Meal allowance</div>
+                      <div class="txn-sub"><span id="lblFoodPerDay">20</span> THB × <span id="calcFoodDays">0</span> days worked</div>
+                    </div>
+                    <div class="txn-amt" id="calcFoodTotal">0.00</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Overtime -->
+              <div class="calc-col">
+                <h3 class="calc-col-title"><span class="dot dot-amber"></span>Overtime</h3>
+                <div class="txn-list">
+                  <div class="txn-row">
+                    <span class="txn-ic ic-amber"><svg class="ic" viewBox="0 0 24 24"><path d="M3 11h18a9 9 0 0 1-18 0zM12 3v4M8 5v2M16 5v2"/></svg></span>
+                    <div class="txn-body">
+                      <div class="txn-title" id="lblOTMealTitle">OT meal</div>
+                      <div class="txn-sub"><span id="lblOTMealPerDay">15</span> THB × <span id="calcOTMealDays">0</span> days with OT ≥ 1 h</div>
+                    </div>
+                    <div class="txn-amt" id="calcOTMealTotal">0.00</div>
+                  </div>
+                  <div class="txn-row">
+                    <span class="txn-ic ic-violet"><span class="txn-ic-text">1.5×</span></span>
+                    <div class="txn-body">
+                      <div class="txn-title" id="lblOT15Title">Overtime 1.5× (workday)</div>
+                      <div class="txn-sub">(<span id="lblOT15Base">20,000</span>/<span id="lblOT15Days">30</span>/8) × (<span id="lblOT15Mult">1.5</span> × <span id="calcOT15Hours">0.0</span> h)</div>
+                    </div>
+                    <div class="txn-amt" id="calcOT15Total">0.00</div>
+                  </div>
+                  <div class="txn-row">
+                    <span class="txn-ic ic-sky"><span class="txn-ic-text">1×</span></span>
+                    <div class="txn-body">
+                      <div class="txn-title" id="lblOT1Title">Holiday 1× (8 h on holiday)</div>
+                      <div class="txn-sub">(<span id="lblOT1Base">20,000</span>/<span id="lblOT1Days">30</span>/8) × (<span id="lblOT1Mult">1.0</span> × <span id="calcOT1Hours">0.0</span> h)</div>
+                    </div>
+                    <div class="txn-amt" id="calcOT1Total">0.00</div>
+                  </div>
+                  <div class="txn-row">
+                    <span class="txn-ic ic-rose"><span class="txn-ic-text">3×</span></span>
+                    <div class="txn-body">
+                      <div class="txn-title" id="lblOT3Title">Holiday OT 3× (after 17:00)</div>
+                      <div class="txn-sub">(<span id="lblOT3Base">20,000</span>/<span id="lblOT3Days">30</span>/8) × (<span id="lblOT3Mult">3.0</span> × <span id="calcOT3Hours">0.0</span> h)</div>
+                    </div>
+                    <div class="txn-amt" id="calcOT3Total">0.00</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Deductions & net -->
+              <div class="calc-col calc-col-right">
+                <h3 class="calc-col-title"><span class="dot dot-rose"></span>Deductions & net</h3>
+                <div class="txn-list">
+                  <div class="txn-row">
+                    <span class="txn-ic ic-rose"><svg class="ic" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+                    <div class="txn-body">
+                      <div class="txn-title" id="lblSSOTitle">Social security (5%)</div>
+                      <div class="txn-sub">Salary cap ฿<span id="lblSSOMaxBase">17,500</span></div>
+                    </div>
+                    <div class="txn-amt amt-neg" id="calcSSOTotal">-875.00</div>
+                  </div>
+                  <div class="txn-row">
+                    <span class="txn-ic ic-gray"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14"/></svg></span>
+                    <div class="txn-body">
+                      <div class="txn-title">Total deductions</div>
+                      <div class="txn-sub">All deductions combined</div>
+                    </div>
+                    <div class="txn-amt amt-neg" id="calcSumDeduct">-875.00</div>
+                  </div>
+                  <div class="txn-row">
+                    <span class="txn-ic ic-gray"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>
+                    <div class="txn-body">
+                      <div class="txn-title">Total gross</div>
+                      <div class="txn-sub">Regular + overtime</div>
+                    </div>
+                    <div class="txn-amt" id="calcSumIncome">0.00</div>
+                  </div>
+                  <div class="txn-row calc-net-row">
+                    <span class="txn-ic ic-lime-solid"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></span>
+                    <div class="txn-body">
+                      <div class="txn-title">Net pay</div>
+                      <div class="txn-sub">Transferred this period</div>
+                    </div>
+                    <div class="txn-amt" id="calcNetPayRow">0.00</div>
+                  </div>
+                </div>
+
+                <!-- Preserved DOM IDs for JS Calculation Engine -->
+                <div id="salaryGrandNetBox" style="display:none;">
+                  <span id="calcGrandNetPay">0.00</span>
+                  <span id="netBoxIncomeVal">0.00</span>
+                  <span id="netBoxDeductVal">0.00</span>
+                  <span id="netBoxNetVal">0.00</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-page-nav-bar no-print">
+              <button type="button" class="btn btn-ghost" onclick="navPrevPeriod()">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+                <span>Previous period</span>
+              </button>
+              <button type="button" class="btn btn-ghost" onclick="switchView('calendar')">
+                <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+                <span>Work calendar</span>
+              </button>
+              <button type="button" class="btn btn-ghost" onclick="navNextPeriod()">
+                <span>Next period</span>
+                <svg class="ic" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Insights -->
+          <div class="insight-grid no-print">
+            <div class="insight-tile">
+              <div class="insight-head">
+                <span class="insight-title">Income mix</span>
+              </div>
+              <div class="mix-bar">
+                <span class="mix-seg seg-regular" id="mixSegRegular" style="width:0%"></span>
+                <span class="mix-seg seg-ot" id="mixSegOT" style="width:0%"></span>
+                <span class="mix-seg seg-deduct" id="mixSegDeduct" style="width:0%"></span>
+              </div>
+              <div class="mix-legend">
+                <span><i class="dot seg-regular"></i><em>Regular</em><b id="mixPctRegular">0%</b></span>
+                <span><i class="dot seg-ot"></i><em>Overtime</em><b id="mixPctOT">0%</b></span>
+                <span><i class="dot seg-deduct"></i><em>Deductions</em><b id="mixPctDeduct">0%</b></span>
+              </div>
+            </div>
+
+            <div class="insight-tile insight-tile-row">
+              <svg class="att-ring" viewBox="0 0 44 44" width="64" height="64">
+                <circle cx="22" cy="22" r="18" class="ring-bg"/>
+                <circle cx="22" cy="22" r="18" class="ring-fg" id="attRingFg" stroke-dasharray="113.1" stroke-dashoffset="113.1"/>
+                <text x="22" y="25" text-anchor="middle" class="ring-text" id="attRingPct">0%</text>
+              </svg>
+              <div class="insight-body">
+                <div class="insight-head"><span class="insight-title">Attendance</span></div>
+                <div class="insight-big"><span id="insCameDays">0</span><small> / <span id="insTargetDays">0</span> days</small></div>
+                <div class="insight-sub" id="insAttStatus">-</div>
+              </div>
+            </div>
+
+            <div class="insight-tile">
+              <div class="insight-head"><span class="insight-title">Pay rates</span></div>
+              <div class="rate-list">
+                <div class="rate-item"><span>Daily rate</span><b id="insDailyRate">0.00</b></div>
+                <div class="rate-item"><span>Hourly rate</span><b id="insHourlyRate">0.00</b></div>
+                <div class="rate-item"><span>Overtime 1.5×</span><b id="insOT15Rate">0.00</b></div>
+              </div>
+            </div>
+
+            <div class="insight-tile">
+              <div class="insight-head"><span class="insight-title">Shortcuts</span></div>
+              <div class="quick-actions">
+                <button type="button" class="qa-btn" onclick="prepareAndPrint()" title="Print payslip">
+                  <span class="qa-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg></span>
+                  <span>Print payslip</span>
+                </button>
+                <button type="button" class="qa-btn" onclick="openSettingsSalaryModal()" title="Salary settings">
+                  <span class="qa-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></span>
+                  <span>Salary settings</span>
+                </button>
+                <button type="button" class="qa-btn" onclick="openCalendarScanModal()" title="Scan company calendar">
+                  <span class="qa-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg></span>
+                  <span>Scan calendar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ================= VIEW: ATTENDANCE ================= -->
+      <section id="view-attendance" class="view-panel no-print" style="display:none;">
+        <div class="container">
+          <div id="adminScopeBannerAtt" class="admin-scope-banner" style="display:none;"></div>
+
+          <div class="page-head">
+            <div>
+              <h1 class="page-title">Attendance</h1>
+              <p class="page-sub">Record daily clock-in and clock-out — overtime is calculated automatically</p>
+            </div>
+          </div>
+
+          <!-- Toolbar -->
+          <div class="period-navigator card" id="attPeriodNavigator">
+            <div class="period-nav-left">
+              <button type="button" class="icon-btn icon-btn-round" onclick="switchView('main')" title="Back to payroll">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+              </button>
+              <button type="button" class="icon-btn icon-btn-round" onclick="navPrevPeriod()" title="Previous period">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <label class="pill-select pill-select-period-att">
+                <select id="payrollPeriodSelectAtt" class="form-select-period" onchange="onPayrollPeriodSelectAttChange()"></select>
+                <svg class="ic pill-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+              </label>
+              <button type="button" class="icon-btn icon-btn-round" onclick="navNextPeriod()" title="Next period">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
+            </div>
+
+            <div class="period-nav-right">
+              <button type="button" class="btn btn-lime" onclick="autoFillNormalWorkdays()" title="Autofill workdays (08:00–17:00)">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M13 2L3 14h8l-2 8 10-12h-8l2-8z"/></svg>
+                <span class="desktop-only-inline">Autofill workdays 08:00–17:00</span>
+                <span class="mobile-only-inline">Autofill</span>
+              </button>
+              <button type="button" class="btn btn-outline-danger" onclick="clearAttendanceTable()" title="Clear all times in this period">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15"/></svg>
+                <span>Clear</span>
+              </button>
+              <button type="button" class="btn btn-outline-secondary" onclick="switchView('calendar')" title="View work calendar">
+                <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+                <span>Calendar</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- KPIs -->
+          <div class="attendance-kpi-bar">
+            <div class="kpi-mini-card">
+              <span class="stat-ic ic-gray"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg></span>
+              <div class="kpi-info">
+                <span class="kpi-label">Target workdays</span>
+                <strong class="kpi-val" id="attCardTargetDays">0 days</strong>
+              </div>
+            </div>
+            <div class="kpi-mini-card">
+              <span class="stat-ic ic-violet"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></span>
+              <div class="kpi-info">
+                <span class="kpi-label">Days worked</span>
+                <strong class="kpi-val" id="attCardCameDays">0 days</strong>
+              </div>
+            </div>
+            <div class="kpi-mini-card">
+              <span class="stat-ic ic-amber"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+              <div class="kpi-info">
+                <span class="kpi-label">Total OT hours</span>
+                <strong class="kpi-val" id="attCardOTHours">0.0 h</strong>
+              </div>
+            </div>
+            <div class="kpi-mini-card kpi-net-card">
+              <span class="stat-ic ic-lime-solid"><svg class="ic" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="3"/><circle cx="12" cy="12" r="2.5"/></svg></span>
+              <div class="kpi-info">
+                <span class="kpi-label">Estimated net pay</span>
+                <strong class="kpi-val" id="attCardNetPay">฿0.00</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Timesheet -->
+          <div class="card">
+            <div class="card-header-flex">
+              <div>
+                <h2 class="card-header-title">Timesheet</h2>
+                <p class="subtitle" id="timesheetPeriodSubtitle">Attendance period</p>
+              </div>
+              <div class="ot-quick-badges">
+                <span class="badge-rule"><i class="dot dot-violet"></i>Clock-in 08:00 when ticked</span>
+                <span class="badge-rule"><i class="dot dot-amber"></i>Pick clock-out time</span>
+                <span class="badge-rule"><i class="dot dot-lime"></i>OT auto-calculated</span>
+              </div>
+            </div>
+
+            <div class="card-body">
+              <details class="ot-hint-banner" id="otHintDetails">
+                <summary class="ot-hint-summary">
+                  <span class="ot-hint-title">
+                    <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    <strong>Clock-out rules &amp; OT rates</strong>
+                  </span>
+                  <span class="ot-hint-toggle">View rules
+                    <svg class="ic" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                  </span>
+                </summary>
+                <div class="ot-hint-content">
+                  <div class="ot-rule-line">
+                    <span class="ot-pill-tag">Workday</span>
+                    <span>17:00 = 0 h · 17:30/17:50 = 0.5 h · 18:20 = 1.0 h · 18:50 = 1.5 h · 19:20 = 2.0 h · 19:50 = 2.5 h … up to 07:50 = 14.5 h (+0.5 h every 30 min)</span>
+                  </div>
+                  <div class="ot-rule-line">
+                    <span class="ot-pill-tag">Holiday</span>
+                    <span>Clock-out 08:30–17:00 counts as <strong>Holiday OT 1.0</strong> · after 17:00 counts as <strong>OT Holiday 3.0</strong></span>
+                  </div>
+                </div>
+              </details>
+
+              <div class="table-responsive">
+                <table class="table-timesheet" id="tableAttendance">
+                  <thead>
+                    <tr>
+                      <th class="col-att-edit mobile-only-table-cell text-center" title="Edit">
+                        <svg class="ic" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+                      </th>
+                      <th class="col-att-date text-center" style="width:64px;">Date</th>
+                      <th class="col-att-day text-center" style="width:44px;">Day</th>
+                      <th class="col-att-status text-center" style="width:140px;">Status</th>
+                      <th class="col-att-in desktop-only-table-cell text-center" style="width:100px;">In</th>
+                      <th class="col-att-out text-center" style="width:104px;">Out</th>
+                      <th class="col-att-ot15 desktop-only-table-cell text-right" style="width:80px;">OT 1.5</th>
+                      <th class="col-att-hol desktop-only-table-cell text-right" style="width:86px;">Holiday 1</th>
+                      <th class="col-att-othol desktop-only-table-cell text-right" style="width:86px;">OT Hol 3</th>
+                      <th class="col-att-ot-total mobile-only-table-cell text-center" style="width:48px;">OT</th>
+                      <th class="col-att-workday desktop-only-table-cell text-center" style="width:150px;">Worked / leave</th>
+                      <th class="col-att-come desktop-only-table-cell text-center" style="width:68px;">Came</th>
+                      <th class="col-att-otday desktop-only-table-cell text-center" style="width:72px;">OT days</th>
+                    </tr>
+                  </thead>
+                  <tbody id="attendanceTbody"></tbody>
+                  <tfoot>
+                    <tr class="timesheet-sum-row desktop-only-table-row">
+                      <td colspan="5" class="text-right">Total</td>
+                      <td class="text-right" id="attTotalOT15">0.0</td>
+                      <td class="text-right" id="attTotalHol">0.0</td>
+                      <td class="text-right" id="attTotalOTHol">0.0</td>
+                      <td class="text-center" id="attTotalTargetDays">0</td>
+                      <td class="text-center" id="attTotalCameDays">0</td>
+                      <td class="text-center" id="attTotalOTDays">0</td>
+                    </tr>
+                    <tr class="timesheet-sum-row mobile-only-table-row">
+                      <td colspan="4" class="text-center">Worked <span id="attMobileCameDays">0</span>/<span id="attMobileTargetDays">0</span> days</td>
+                      <td class="text-center">Total OT</td>
+                      <td class="text-center" id="attMobileTotalOT">0.0</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <div class="attendance-footer-bar">
+                <button type="button" class="btn btn-ghost" onclick="switchView('main')">
+                  <svg class="ic" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+                  Back to payroll
+                </button>
+                <button type="button" class="btn btn-primary" onclick="switchView('calendar')">
+                  Go to work calendar
+                  <svg class="ic" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIEW: CALENDAR ================= -->
+      <section id="view-calendar" class="view-panel no-print" style="display:none;">
+        <div class="container">
+          <div class="page-head page-head-split">
+            <div>
+              <h1 class="page-title">Work calendar</h1>
+              <p class="page-sub">
+                <span id="calHeaderCompanyBadge" class="badge-cal-company">ORBRAY</span>
+                <span class="sep-dot">·</span>
+                <span>Year <span id="calHeaderYear">2026</span></span>
+                <span class="sep-dot">·</span>
+                <span>Click a date to change its status</span>
+              </p>
+            </div>
+            <div class="calendar-header-actions">
+              <label class="pill-select pill-select-sm">
+                <select id="calHeaderCompanySelect" class="cal-header-select" onchange="onRibbonCompanyChange(this.value)" title="Select company"></select>
+                <svg class="ic pill-chevron" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+              </label>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openAddCompanyModal()" title="Add company">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Company
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openAddYearModal()" title="Add calendar year">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add year
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-danger" id="btnDeleteCurrentYear" onclick="deleteCurrentYear()" style="display:none;">Delete year</button>
+              <button type="button" class="btn btn-sm btn-primary" onclick="openCalendarScanModal()" title="Scan a calendar with AI">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg>
+                AI calendar scan
+              </button>
+            </div>
+          </div>
+
+          <div class="calendar-legend-box">
+            <div class="legend-item"><span class="legend-badge badge-workday"></span><span>Workday</span></div>
+            <div class="legend-item"><span class="legend-badge badge-work-sat"></span><span>Working Saturday</span></div>
+            <div class="legend-item"><span class="legend-badge badge-orbray"></span><span>Special workday</span></div>
+            <div class="legend-item"><span class="legend-badge badge-national"></span><span>Public holiday</span></div>
+            <div class="legend-item"><span class="legend-badge badge-memorial"></span><span>Paid company holiday</span></div>
+            <div class="legend-item"><span class="legend-badge badge-bridge"></span><span>Bridge holiday</span></div>
+            <div class="legend-item"><span class="legend-badge badge-sat-holiday"></span><span>Saturday off</span></div>
+            <div class="legend-item"><span class="legend-badge badge-sunday"></span><span>Sunday</span></div>
+          </div>
+
+          <div class="orbray-cal-grid" id="orbrayCalendarGrid"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+  <!-- MODAL: ADD NEW YEAR -->
+  <div class="modal-backdrop" id="addYearModal" style="display:none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Add calendar year</h3>
+        <button type="button" class="modal-close" onclick="closeAddYearModal()"><svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="inpNewYearBE">Year to add (e.g. 2027)</label>
+          <input type="number" id="inpNewYearBE" class="form-control" placeholder="2027" min="1900" max="3000" value="2027">
+          <small class="text-muted">Thai B.E. years (e.g. 2570) are also accepted.</small>
+        </div>
+        <div class="form-group">
+          <label for="selSatPreset">Default Saturday pattern</label>
+          <select id="selSatPreset" class="form-control form-select">
+            <option value="ALL_OFF">All Saturdays off</option>
+            <option value="ALT_WORK">Alternate Saturdays</option>
+            <option value="ALL_WORK">All Saturdays worked</option>
+          </select>
+        </div>
+        <p class="modal-hint">
+          Creates a 12-month calendar and 12 payroll periods (cut-off 21st to 20th, paid at month end).
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAddYearModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="confirmAddNewYear()">Create year</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT DAY STATUS -->
+  <div class="modal-backdrop" id="editDayModal" style="display:none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Day status: <span id="modalDayDateDisplay"></span></h3>
+        <button type="button" class="modal-close" onclick="closeEditDayModal()"><svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="modalTargetDateStr" value="">
+        <div class="form-group">
+          <label>Day type</label>
+          <select id="modalDayTypeSelect" class="form-control form-select" onchange="onModalDayTypeSelectChange()">
+            <option value="NORMAL_WORKDAY">Workday</option>
+            <option value="NATIONAL_HOLIDAY">Public holiday</option>
+            <option value="MEMORIAL_HOLIDAY">Paid company holiday</option>
+            <option value="ORBRAY_WORKDAY">Special workday</option>
+            <option value="SATURDAY_HOLIDAY">Saturday off</option>
+            <option value="WORKING_SATURDAY">Working Saturday</option>
+            <option value="SUNDAY">Sunday</option>
+            <option value="BRIDGE_HOLIDAY">Bridge holiday</option>
+          </select>
+        </div>
+        <div class="form-group" id="modalHolidayNameGroup">
+          <label for="modalHolidayNameInput">Holiday name / note (optional)</label>
+          <input type="text" id="modalHolidayNameInput" class="form-control" placeholder="e.g. New Year's Day, Songkran">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeEditDayModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveDayStatusFromModal()">Save status</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SETTINGS SALARY & RATES -->
+  <div class="modal-backdrop" id="settingsSalaryModal" style="display:none;">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <div class="modal-header-info">
+          <div class="modal-salary-title-wrap">
+            <h3 class="modal-salary-title">
+              <span class="desktop-only-inline">Salary & allowance settings</span>
+              <span class="mobile-only-inline">Salary settings</span>
+            </h3>
+            <div class="modal-salary-badges">
+              <span class="card-paydate-badge modal-badge-period" id="modalSalaryPeriodBadge">
+                <svg class="modal-badge-2d-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <span class="desktop-only-inline">Period: -</span>
+                <span class="mobile-only-inline">-</span>
+              </span>
+              <span class="card-paydate-badge modal-badge-status status-global" id="modalSalaryConfigStatusBadge">
+                <svg class="modal-badge-2d-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                <span class="desktop-only-inline">Using standard rates</span>
+                <span class="mobile-only-inline">Standard</span>
+              </span>
+            </div>
+          </div>
+          <p class="subtitle text-muted small" id="modalSalaryPeriodSubtitle" style="margin:4px 0 0 0;">
+            <span class="desktop-only-inline">Set salary, allowances and overtime rates used to calculate net pay</span>
+            <span class="mobile-only-inline">Salary, allowances and OT rates</span>
+          </p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeSettingsSalaryModal()"><svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-grid">
+          
+          <div class="settings-card">
+            <h4 class="settings-card-title">Monthly salary & benefits</h4>
+            <div class="form-group">
+              <label for="cfgBaseSalary">Base salary</label>
+              <div class="input-unit-group">
+                <input type="number" id="cfgBaseSalary" class="form-control" min="0" step="100" oninput="updateLiveOTPreview()">
+                <span class="unit-tag"></span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="cfgTransportationAllowance">Travel allowance</label>
+              <div class="input-unit-group">
+                <input type="number" id="cfgTransportationAllowance" class="form-control" min="0" step="10">
+                <span class="unit-tag">THB/month</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="cfgDiligenceFullAmount">Diligence allowance (full attendance)</label>
+              <div class="input-unit-group">
+                <input type="number" id="cfgDiligenceFullAmount" class="form-control" min="0" step="10">
+                <span class="unit-tag">THB/month</span>
+              </div>
+            </div>
+          </div>
+
+          
+          <div class="settings-card">
+            <h4 class="settings-card-title">Daily allowances</h4>
+            <div class="form-group">
+              <label for="cfgFoodPerDay">Meal allowance per workday</label>
+              <div class="input-unit-group">
+                <input type="number" id="cfgFoodPerDay" class="form-control" min="0" step="1">
+                <span class="unit-tag">THB/day</span>
+              </div>
+              <small class="text-muted">Multiplied by days worked</small>
+            </div>
+            <div class="form-group">
+              <label for="cfgOtMealPerDay">OT meal (when OT &ge; 1 h)</label>
+              <div class="input-unit-group">
+                <input type="number" id="cfgOtMealPerDay" class="form-control" min="0" step="1">
+                <span class="unit-tag">THB/day</span>
+              </div>
+              <small class="text-muted">Multiplied by days with overtime</small>
+            </div>
+          </div>
+
+          
+          <div class="settings-card">
+            <h4 class="settings-card-title">Overtime multipliers</h4>
+            <div class="ot-formula-banner">
+              <span>Hourly base</span>
+              <strong>(salary &divide; 30 &divide; 8)</strong>
+            </div>
+            <div class="form-row-3">
+              <div class="form-group">
+                <label for="cfgOt15Multiplier">Workday</label>
+                <input type="number" id="cfgOt15Multiplier" class="form-control" min="0" step="0.1">
+              </div>
+              <div class="form-group">
+                <label for="cfgOt1Multiplier">Holiday 8 h</label>
+                <input type="number" id="cfgOt1Multiplier" class="form-control" min="0" step="0.1">
+              </div>
+              <div class="form-group">
+                <label for="cfgOt3Multiplier">Holiday &gt;17:00</label>
+                <input type="number" id="cfgOt3Multiplier" class="form-control" min="0" step="0.1">
+              </div>
+            </div>
+            <div class="live-ot-preview-box">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
+                <span>Regular hourly rate</span>
+                <strong style="font-size: 1rem;"><span id="cfgLiveOTRate">83.33</span> THB/h</strong>
+              </div>
+              <div style="font-size: 0.74rem; color: #71717a; margin-top: 3px;">
+                (salary <span id="cfgLiveOTSalary">20,000</span> &divide; 30 days &divide; 8 h)
+              </div>
+            </div>
+          </div>
+
+          
+          <div class="settings-card">
+            <h4 class="settings-card-title">Social security contribution</h4>
+            <div class="form-group">
+              <label for="cfgSsoDeduction">Fixed monthly deduction</label>
+              <div class="input-unit-group">
+                <input type="number" id="cfgSsoDeduction" class="form-control" min="0" step="1">
+                <span class="unit-tag">THB/month</span>
+              </div>
+              <small class="text-muted">Actual or fixed amount (e.g. 875 THB)</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer modal-footer-between salary-settings-footer" id="settingsSalaryModalFooter">
+        <div class="salary-modal-footer-utils" id="salaryModalFooterUtils">
+          <button type="button" class="btn btn-outline-danger btn-sm" onclick="resetSalaryConfigToDefault()" title="Reset the form to defaults">
+            <span class="desktop-only-inline">Reset to defaults</span>
+            <span class="mobile-only-inline">Reset</span>
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearSalaryConfigToZero()" title="Set salary, allowances and deductions to 0">
+            <span class="desktop-only-inline">Set all to 0 (not started)</span>
+            <span class="mobile-only-inline">Set to 0</span>
+          </button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="btnResetPeriodSalaryConfig" onclick="resetPeriodSalaryConfigToDefault()" style="display: none;" title="Remove this period's override">
+            <span class="desktop-only-inline">Clear period override</span>
+            <span class="mobile-only-inline">Clear override</span>
+          </button>
+          <button type="button" class="btn btn-outline-primary btn-sm" onclick="closeSettingsSalaryModal(); openFirebaseConfigModal();" title="Firebase cloud database">
+            <span class="desktop-only-inline">Firebase server</span>
+            <span class="mobile-only-inline">Firebase</span>
+          </button>
+        </div>
+        <div class="salary-modal-footer-actions" id="salaryModalFooterActions">
+          <div class="salary-footer-sub-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeSettingsSalaryModal()">
+              Cancel
+            </button>
+            <button type="button" class="btn btn-outline-primary" id="btnSaveSalaryForAllPeriods" onclick="saveSalaryConfigFromModal('all')" title="Save as the standard for all periods">
+              <span class="desktop-only-inline">Save for all periods</span>
+              <span class="mobile-only-inline">All periods</span>
+            </button>
+          </div>
+          <button type="button" class="btn btn-primary btn-save-period-main" id="btnSaveSalaryForPeriod" onclick="saveSalaryConfigFromModal('period')" title="Save for this period only">
+            <svg class="btn-2d-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+              <polyline points="17 21 17 13 7 13 7 21"></polyline>
+              <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+            <span id="btnSaveSalaryPeriodLabel">Save for this period</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PIN AUTH & LOGIN -->
+  <div class="modal-backdrop" id="authModal" style="display:none;">
+    <div class="modal-dialog modal-dialog-sm">
+      <div class="modal-header">
+        <div class="auth-header-title">
+          <div>
+            <h3 id="authModalTitle">Sign in with PIN</h3>
+            <p class="subtitle text-muted small" style="margin:2px 0 0 0;">Enter your 4–8 digit PIN</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close" onclick="closeAuthModal()"><svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <!-- Auth Alerts -->
+        <div class="alert alert-danger" id="authErrorAlert" style="display:none;"></div>
+        <div class="alert alert-success" id="authSuccessAlert" style="display:none;"></div>
+
+        <div class="pin-login-box">
+          <div class="pin-display-wrapper">
+            <input type="password" id="pinDisplayInput" class="pin-input-field" maxlength="8" placeholder="••••" autocomplete="off" onkeydown="handlePinKeydown(event)" autofocus>
+            <button type="button" class="pin-toggle-visibility" onclick="togglePinVisibility()" title="Show / hide PIN">
+              <span id="pinVisibilityIcon">👁️</span>
+            </button>
+          </div>
+
+          <!-- Numeric Keypad -->
+          <div class="pin-keypad">
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('1')">1</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('2')">2</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('3')">3</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('4')">4</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('5')">5</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('6')">6</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('7')">7</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('8')">8</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('9')">9</button>
+            <button type="button" class="pin-key-btn pin-key-action" onclick="clearPinInput()" title="Clear">C</button>
+            <button type="button" class="pin-key-btn" onclick="pressPinDigit('0')">0</button>
+            <button type="button" class="pin-key-btn pin-key-action" onclick="backspacePinDigit()" title="Delete digit">⌫</button>
+          </div>
+
+          <button type="button" class="btn btn-primary btn-block btn-lg" id="btnAuthSubmit" onclick="submitPinLogin()" style="max-width: 290px;">
+            Sign in
+          </button>
+        </div>
+
+        <div class="auth-footer-help">
+          <p class="text-muted small" style="margin: 0;">
+            Use the personal PIN assigned to you.
+          </p>
+          <div style="margin-top: 10px;">
+            <a href="javascript:void(0)" onclick="openFirebaseConfigModal()">Configure Firebase project</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: USER PROFILE & QUICK ACTIONS POPUP (MOBILE & DESKTOP) -->
+  <div class="modal-backdrop user-profile-modal-backdrop" id="userProfileModal" style="display: none; z-index: 1055;" onclick="handleUserProfileBackdropClick(event)">
+    <div class="modal-dialog modal-dialog-sm user-profile-modal-dialog" onclick="event.stopPropagation()">
+      <div class="modal-header user-profile-modal-header">
+        <div class="user-profile-header-left">
+          <button type="button" class="avatar-edit-wrap" onclick="openProfilePhotoPicker()" title="Change profile photo" aria-label="Change profile photo">
+            <div class="user-modal-avatar" id="userModalAvatar">J</div>
+            <span class="avatar-cam"><svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/></svg></span>
+          </button>
+          <div class="user-modal-details">
+            <div class="user-modal-name" id="userModalName">JITTRAKAN K.</div>
+            <div class="user-modal-role-row">
+              <span class="user-modal-role-pill role-admin" id="userModalRoleBadge">
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                <span>Admin</span>
+              </span>
+              <span class="user-modal-code" id="userModalCode">ID: 20523</span>
+            </div>
+          </div>
+        </div>
+        <button type="button" class="modal-close" onclick="closeUserProfileModal()" aria-label="Close"><svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      </div>
+
+      <div class="modal-body user-profile-modal-body">
+        <!-- Admin Switch User Card (Only shown for Admin) -->
+        <div class="user-modal-card" id="userModalAdminSection" style="display: none;">
+          <label class="user-modal-card-label" for="userModalSwitchSelect">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>View employee</span>
+          </label>
+          <select id="userModalSwitchSelect" class="form-control user-modal-select" onchange="handleModalUserSwitch(this.value)">
+            <!-- Options populated dynamically -->
+          </select>
+        </div>
+
+        <!-- Quick Action Buttons List -->
+        <div class="user-modal-actions-list">
+          <button type="button" class="user-modal-action-btn" onclick="closeUserProfileModal(); openAccountModal();">
+            <div class="user-modal-action-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div class="user-modal-action-text">
+              <div class="user-modal-action-title">My account</div>
+              <div class="user-modal-action-desc">Profile, employee ID and PIN</div>
+            </div>
+            <span class="user-modal-arrow">›</span>
+          </button>
+
+          <button type="button" class="user-modal-action-btn" id="userModalManageUsersBtn" onclick="closeUserProfileModal(); openManageUsersModal();">
+            <div class="user-modal-action-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="user-modal-action-text">
+              <div class="user-modal-action-title">Manage users</div>
+              <div class="user-modal-action-desc">Add, edit or remove employees and PINs</div>
+            </div>
+            <span class="user-modal-arrow">›</span>
+          </button>
+
+          <button type="button" class="user-modal-action-btn" onclick="closeUserProfileModal(); openFirebaseConfigModal();">
+            <div class="user-modal-action-icon">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+            </div>
+            <div class="user-modal-action-text">
+              <div class="user-modal-action-title">
+                <span>Firebase server</span>
+                <span class="user-modal-status-pill status-online" id="userModalFbStatus">ONLINE</span>
+              </div>
+              <div class="user-modal-action-desc">Check connection and cloud sync</div>
+            </div>
+            <span class="user-modal-arrow">›</span>
+          </button>
+        </div>
+
+        <div class="user-modal-footer-sep"></div>
+
+        <button type="button" class="user-modal-logout-btn" onclick="closeUserProfileModal(); handleLogout();">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Sign out</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MY ACCOUNT PROFILE -->
+  <div class="modal-backdrop" id="accountModal" style="display:none;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div style="min-width: 0; flex: 1;">
+          <h3 style="margin:0; font-size: 0.95rem; font-weight: 800; line-height: 1.25;">My account</h3>
+          <p class="subtitle text-muted small" style="margin:2px 0 0 0; line-height: 1.25;">Profile, employee ID and PIN</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeAccountModal()"><svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div id="accountAlert" class="alert alert-info" style="display:none;"></div>
+
+        <!-- Account Profile Overview Card -->
+        <div class="account-profile-card">
+          <div class="account-avatar-large" id="accAvatarLarge">👤</div>
+          <div class="account-profile-summary">
+            <div class="account-summary-name" id="accSummaryName">ADMIN</div>
+            <div class="account-summary-tags">
+              <span class="badge-account-role" id="accSummaryRole">ADMIN</span>
+              <span class="badge-account-code" id="accSummaryCode">ID: 20523</span>
+              <span class="badge-account-dept" id="accSummaryDept">Admin</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Edit Form -->
+        <form id="accountProfileForm" onsubmit="handleSaveAccountProfile(event)">
+          <div class="account-fields-grid">
+            <div class="form-group">
+              <label for="accName" class="user-form-label">Full name <span class="text-danger">*</span></label>
+              <input type="text" id="accName" class="form-control user-form-input" required placeholder="e.g. John Smith">
+            </div>
+
+            <div class="form-group">
+              <label for="accCompany" class="user-form-label">Company <span class="text-danger">*</span></label>
+              <input type="text" id="accCompany" class="form-control user-form-input" required placeholder="e.g. CALSA">
+            </div>
+
+            <div class="form-group">
+              <label for="accEmpCode" class="user-form-label">Employee ID <span class="text-danger">*</span></label>
+              <input type="text" id="accEmpCode" class="form-control font-mono user-form-input" required placeholder="e.g. 20523">
+            </div>
+
+            <div class="form-group">
+              <label for="accDept" class="user-form-label">Department <span class="text-danger">*</span></label>
+              <input type="text" id="accDept" class="form-control user-form-input" required placeholder="e.g. Operations">
+            </div>
+
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label for="accPin" class="user-form-label">Sign-in PIN (4–8 digits) <span class="text-danger">*</span></label>
+              <div class="input-with-action">
+                <input type="password" id="accPin" class="form-control font-mono user-form-input" pattern="\d{4,8}" maxlength="8" required placeholder="••••">
+                <button type="button" class="btn-input-toggle" onclick="toggleAccPinVisibility()" title="Show / hide PIN">
+                  <span id="accPinIcon">👁️</span>
+                </button>
+              </div>
+              <small class="form-text text-muted" style="font-size:0.78rem;">Used next time you sign in.</small>
+            </div>
+          </div>
+
+          <div class="modal-footer modal-footer-custom" style="padding: 14px 0 0 0; margin-top: 18px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+            <button type="button" class="btn btn-secondary" onclick="goBackToUserProfileModal()">Back</button>
+            <button type="submit" class="btn btn-primary" id="btnSubmitAccountProfile" onclick="handleSaveAccountProfile(event)">
+              Save account
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MANAGE USERS & PINS (ADMIN ONLY) -->
+  <div class="modal-backdrop" id="manageUsersModal" style="display:none;">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <div style="min-width: 0; flex: 1;">
+          <h3 style="margin:0; font-size: 0.95rem; font-weight: 800; line-height: 1.25;">Manage users</h3>
+          <p class="subtitle text-muted small" style="margin:2px 0 0 0; line-height: 1.25;">Add, edit or remove employees and PINs</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeManageUsersModal()"><svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div id="manageUsersAlert" class="alert alert-info" style="display:none;"></div>
+
+        <!-- Add New User Card -->
+        <div class="user-mgmt-card">
+          <div class="user-mgmt-card-header">
+            <h4 class="user-mgmt-card-title">Add employee</h4>
+          </div>
+          <form id="addNewUserForm" onsubmit="handleAddNewUserSubmit(event)">
+            <div class="user-mgmt-input-grid">
+              <div class="form-group mb-0">
+                <label for="newUserName" class="user-form-label">Full name</label>
+                <input type="text" id="newUserName" class="form-control user-form-input" placeholder="e.g. John Smith" required>
+              </div>
+              <div class="form-group mb-0">
+                <label for="newUserEmpCode" class="user-form-label">Employee ID</label>
+                <input type="text" id="newUserEmpCode" class="form-control user-form-input" placeholder="e.g. EMP-003">
+              </div>
+              <div class="form-group mb-0">
+                <label for="newUserDept" class="user-form-label">Department</label>
+                <input type="text" id="newUserDept" class="form-control user-form-input" placeholder="e.g. Operations">
+              </div>
+              <div class="form-group mb-0">
+                <label for="newUserPin" class="user-form-label">PIN (4–8 digits)</label>
+                <input type="text" id="newUserPin" class="form-control font-mono user-form-input text-center" placeholder="3333" pattern="\d{4,8}" maxlength="8" required>
+              </div>
+              <div>
+                <button type="submit" class="btn btn-primary btn-save-user">
+                  Add
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- System Users List Section -->
+        <div class="user-mgmt-section-header">
+          <div>
+            <h4 style="color:var(--text-primary); font-size:0.92rem; font-weight:800; margin:0;">
+              All users
+            </h4>
+            <span class="text-muted small" style="font-size:0.72rem;">Edit or remove an employee</span>
+          </div>
+          <button type="button" class="btn btn-outline-danger btn-xs" onclick="confirmClearAllStaffUsers()" title="Delete all employees except the admin">
+            Delete all employees
+          </button>
+        </div>
+
+        <!-- Desktop Table View (Hidden on mobile) -->
+        <div class="user-table-wrapper desktop-only-table">
+          <table class="users-table-modern">
+            <thead>
+              <tr>
+                <th style="width: 85px; text-align: center;">Role</th>
+                <th style="text-align: left;">Name</th>
+                <th style="width: 100px; text-align: center;">Employee ID</th>
+                <th style="text-align: left;">Department</th>
+                <th style="width: 105px; text-align: center;">PIN</th>
+                <th style="width: 150px; text-align: center;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="manageUsersTableBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile Cards View (Visible only on mobile <= 768px and in simulator) -->
+        <div id="manageUsersCardsMobile" class="user-cards-mobile-container mobile-only-cards">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+        <button type="button" class="btn btn-secondary" onclick="goBackToUserProfileModal()">Back</button>
+        <button type="button" class="btn btn-outline-secondary" onclick="closeManageUsersModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT USER (ADMIN ONLY) -->
+  <div class="modal-backdrop" id="editUserModal" style="display:none; z-index: 1060;">
+    <div class="modal-dialog modal-dialog-sm">
+      <div class="modal-header">
+        <div>
+          <h3 style="margin:0; font-size: 1.1rem;">Edit employee</h3>
+          <p class="subtitle text-muted small" style="margin:2px 0 0 0;">Update name, employee ID, department or PIN</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeEditUserModal()"><svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div id="editUserAlert" class="alert alert-danger" style="display:none;"></div>
+        <form id="editUserForm" onsubmit="handleSaveEditUserSubmit(event)">
+          <input type="hidden" id="editUserId">
+          <div class="form-group">
+            <label for="editUserName" class="user-form-label">Full name <span class="text-danger">*</span></label>
+            <input type="text" id="editUserName" class="form-control user-form-input" required placeholder="e.g. John Smith">
+          </div>
+          <div class="form-group">
+            <label for="editUserEmpCode" class="user-form-label">Employee ID <span class="text-danger">*</span></label>
+            <input type="text" id="editUserEmpCode" class="form-control font-mono user-form-input" required placeholder="e.g. EMP-001">
+          </div>
+          <div class="form-group">
+            <label for="editUserDept" class="user-form-label">Department <span class="text-danger">*</span></label>
+            <input type="text" id="editUserDept" class="form-control user-form-input" required placeholder="e.g. Operations">
+          </div>
+          <div class="form-group">
+            <label for="editUserPin" class="user-form-label">Sign-in PIN (4–8 digits) <span class="text-danger">*</span></label>
+            <input type="text" id="editUserPin" class="form-control font-mono user-form-input text-center" pattern="\d{4,8}" maxlength="8" required placeholder="1234">
+          </div>
+          <div class="modal-footer modal-footer-custom" style="padding: 14px 0 0 0; margin-top: 16px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 8px;">
+            <button type="button" class="btn btn-secondary" onclick="closeEditUserModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              Save changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: FIREBASE CONFIG KEYS -->
+  <div class="modal-backdrop" id="firebaseConfigModal" style="display:none; z-index: 1070;">
+    <div class="modal-dialog fb-config-dialog" style="max-width: 620px;">
+      <div class="modal-header">
+        <div style="min-width: 0; flex: 1;">
+          <h3 style="margin:0; font-size: 0.95rem; font-weight: 800; line-height: 1.25;">Firebase server</h3>
+          <p class="subtitle text-muted small" style="margin:2px 0 0 0; line-height: 1.25;">Connection and Cloud Firestore sync</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeFirebaseConfigModal()"><svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      </div>
+      <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+        <!-- Live Status Banner -->
+        <div id="fbServerStatusBanner" class="fb-server-status-banner"></div>
+
+        <!-- Alert Notification Box -->
+        <div id="fbConfigAlert" class="alert" style="display: none; margin-bottom: 14px;"></div>
+
+        <!-- Auto-Paste & Auto-Detect Card -->
+        <div class="fb-autopaste-card">
+          <div class="fb-card-header">
+            <div class="fb-card-title-group">
+              <span class="fb-card-icon">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+              </span>
+              <span class="fb-card-title">Paste Firebase config</span>
+            </div>
+            <span class="fb-card-badge">AUTO FILL</span>
+          </div>
+
+          <div class="fb-guide-wrapper">
+            <div class="fb-guide-intro">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <span>Copy it from Firebase:</span>
+            </div>
+            <div class="fb-path-bar">
+              <span class="fb-path-node">Project settings</span>
+              <span class="fb-path-sep">›</span>
+              <span class="fb-path-node">Your apps</span>
+              <span class="fb-path-sep">›</span>
+              <span class="fb-path-node fb-path-active">Config</span>
+            </div>
+          </div>
+
+          <div class="fb-textarea-wrapper">
+            <textarea id="fbCfgRawPaste" class="form-control font-mono preserve-case" rows="4" placeholder="// Paste your Firebase config here&#10;const firebaseConfig = {&#10;  apiKey: &quot;AIzaSy...&quot;,&#10;  projectId: &quot;my-salary-app&quot;,&#10;  ...&#10;};"></textarea>
+          </div>
+
+          <div class="fb-autopaste-actions">
+            <div class="fb-autopaste-tip">
+              <span class="tip-dot"></span>
+              <span>Supports <code>JavaScript</code> and <code>JSON</code></span>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm fb-parse-btn" onclick="parseRawFirebaseConfig()">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              Auto fill
+            </button>
+          </div>
+        </div>
+
+        <div style="margin: 18px 0 12px 0; border-top: 1px solid var(--border-color); position: relative; text-align: center;">
+          <span style="position: relative; top: -10px; background: #fff; padding: 0 10px; font-size: 0.78rem; color: #71717a; font-weight: 700;">
+            or enter the details manually
+          </span>
+        </div>
+
+        <!-- Form Fields Grid -->
+        <div class="fb-form-grid">
+          <div class="form-group">
+            <label for="fbCfgProjectId">Project ID <span class="text-danger">*</span>:</label>
+            <input type="text" id="fbCfgProjectId" class="form-control font-mono preserve-case" placeholder="e.g. my-company-payroll">
+          </div>
+
+          <div class="form-group">
+            <label for="fbCfgApiKey">API Key <span class="text-danger">*</span>:</label>
+            <div class="input-unit-group">
+              <input type="password" id="fbCfgApiKey" class="form-control font-mono preserve-case" placeholder="AIzaSy...">
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="toggleFbApiKeyVisibility()" style="border:none; background:transparent; padding: 0 8px;" title="Show / hide API key">
+                <span id="fbApiKeyToggleIcon">👁️</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="fbCfgAuthDomain">Auth Domain:</label>
+            <input type="text" id="fbCfgAuthDomain" class="form-control font-mono preserve-case" placeholder="e.g. my-company-payroll.firebaseapp.com">
+          </div>
+
+          <div class="form-group">
+            <label for="fbCfgStorageBucket">Storage Bucket:</label>
+            <input type="text" id="fbCfgStorageBucket" class="form-control font-mono preserve-case" placeholder="e.g. my-company-payroll.appspot.com">
+          </div>
+
+          <div class="form-group">
+            <label for="fbCfgMessagingSenderId">Messaging Sender ID:</label>
+            <input type="text" id="fbCfgMessagingSenderId" class="form-control font-mono preserve-case" placeholder="e.g. 123456789012">
+          </div>
+
+          <div class="form-group">
+            <label for="fbCfgAppId">App ID:</label>
+            <input type="text" id="fbCfgAppId" class="form-control font-mono preserve-case" placeholder="e.g. 1:123456789012:web:abcdef">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer modal-footer-between fb-modal-footer">
+        <div class="fb-footer-left">
+          <button type="button" class="btn btn-outline-info" id="btnTestFbConn" onclick="testFirebaseConfigFromModal()" title="Test the Firebase connection">
+            Test connection
+          </button>
+          <button type="button" class="btn btn-outline-secondary" onclick="resetFirebaseConfigDefault()" title="Switch back to offline local storage">
+            Reset to local mode
+          </button>
+        </div>
+        <div class="fb-footer-right">
+          <button type="button" class="btn btn-secondary" onclick="goBackToUserProfileModal()">Back</button>
+          <button type="button" class="btn btn-primary" id="btnSaveFbConfig" onclick="saveFirebaseConfigFromModal()">
+            Save & connect
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD NEW COMPANY & DATE CALENDAR -->
+  <div class="modal-backdrop" id="addCompanyModal" style="display:none; z-index: 1050;">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <div>
+          <h3>Add company</h3>
+          <p class="modal-subtitle">Creates the company with its work calendar, holidays and payroll periods</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeAddCompanyModal()"><svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <!-- Section 1: Company Profile -->
+        <div class="form-section-title">1 · Company profile</div>
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label for="compNewName">Company name <span class="text-danger">*</span></label>
+            <input type="text" id="compNewName" class="form-control" placeholder="e.g. SIAM DENSO, TOYOTA" required>
+          </div>
+          <div class="form-group">
+            <label for="compNewCode">Short code</label>
+            <input type="text" id="compNewCode" class="form-control" placeholder="e.g. SDM, TTC" maxlength="12">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="compNewDesc">Description / note</label>
+          <input type="text" id="compNewDesc" class="form-control" placeholder="e.g. Head office, Plant 1">
+        </div>
+
+        <!-- Scanner Prompt Banner -->
+        <div class="scan-prompt-banner">
+          <div class="scan-prompt-icon"><svg class="ic" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="2"/></svg></div>
+          <div class="scan-prompt-content">
+            <div class="scan-prompt-title">Have a photo of your company calendar?</div>
+            <div class="scan-prompt-desc">Upload it and AI will detect workdays, working Saturdays and holidays for you.</div>
+          </div>
+          <button type="button" class="btn btn-sm btn-dark" onclick="closeAddCompanyModal(); openCalendarScanModal();">
+            Scan with AI
+          </button>
+        </div>
+
+        <!-- Section 2: Date & Calendar Setup -->
+        <div class="form-section-title mt-3">2 · Work calendar</div>
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label for="compNewYearBE">Calendar year <span class="text-danger">*</span></label>
+            <input type="number" id="compNewYearBE" class="form-control" placeholder="2026" min="1900" max="3000" value="2026" oninput="updateCompNewYearCEPreview()">
+            <small class="text-muted">Thai B.E.: <span id="compNewYearCEPreview">2569</span></small>
+          </div>
+          <div class="form-group">
+            <label for="compNewSatPreset">Saturday pattern <span class="text-danger">*</span></label>
+            <select id="compNewSatPreset" class="form-control form-select">
+              <option value="ALL_OFF">All Saturdays off (Mon–Fri)</option>
+              <option value="ALT_WORK">Alternate Saturdays</option>
+              <option value="ALL_WORK">All Saturdays worked (Mon–Sat)</option>
+              <option value="CLONE_ORBRAY">Copy Orbray 2026 template (16 working Saturdays)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.88rem;">
+            <input type="checkbox" id="compNewUseNationalHols" checked style="width: 16px; height: 16px; cursor: pointer;">
+            <span><strong>Add public holidays automatically</strong> (official Thai holidays such as New Year, Songkran, Labour Day)</span>
+          </label>
+        </div>
+
+        <div class="form-row-2col">
+          <div class="form-group">
+            <label for="compNewMemorialHols">Extra paid company holidays</label>
+            <input type="text" id="compNewMemorialHols" class="form-control" placeholder="e.g. 2026-09-19 (comma-separated)">
+            <small class="text-muted">Paid company holidays (memorial days)</small>
+          </div>
+          <div class="form-group">
+            <label for="compNewSpecialWorkdays">Special workdays</label>
+            <input type="text" id="compNewSpecialWorkdays" class="form-control" placeholder="e.g. 2026-10-17 (comma-separated)">
+            <small class="text-muted">Saturdays or holidays the company requires you to work</small>
+          </div>
+        </div>
+
+        <div class="modal-hint-box">
+          <div class="hint-icon"><svg class="ic" viewBox="0 0 24 24"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg></div>
+          <div class="hint-text">
+            <strong>Tip:</strong> Saving creates a 12-month calendar and 12 payroll periods (21st–20th). Open <strong>Work calendar</strong> any time to adjust individual days.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeAddCompanyModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="confirmAddNewCompany()">Create company</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MANAGE COMPANIES -->
+  <div class="modal-backdrop" id="manageCompaniesModal" style="display:none; z-index: 1050;">
+    <div class="modal-dialog modal-dialog-lg">
+      <div class="modal-header">
+        <div>
+          <h3>Companies</h3>
+          <p class="modal-subtitle">All companies, their calendar years and which one is active</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeManageCompaniesModal()"><svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <div class="manage-comp-top-bar">
+          <span class="manage-comp-count">Total: <strong id="manageCompTotalCount">1</strong> companies</span>
+          <button type="button" class="btn btn-primary btn-sm" onclick="closeManageCompaniesModal(); openAddCompanyModal();">
+            + Add company
+          </button>
+        </div>
+        <div class="table-responsive">
+          <table class="table manage-companies-table">
+            <thead>
+              <tr>
+                <th>Company</th>
+                <th>Code</th>
+                <th>Years</th>
+                <th>Status</th>
+                <th style="text-align: right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="manageCompaniesTableBody">
+              <!-- populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeManageCompaniesModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MOBILE ATTENDANCE QUICK EDIT -->
+  <div class="modal-backdrop" id="modalAttendanceEdit" style="display:none; z-index: 1070;" onclick="if(event.target.id === 'modalAttendanceEdit') closeAttendanceEditModal()">
+    <div class="modal-dialog att-edit-modal-dialog">
+      <div class="modal-header">
+        <div>
+          <h3 class="m-0" style="font-size: 1.05rem; display: flex; align-items: center; gap: 6px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+            Edit attendance
+          </h3>
+          <p class="subtitle m-0" id="attEditModalSubtitle" style="font-size: 0.76rem; margin-top: 2px;">Date --/--/----</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeAttendanceEditModal()"><svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      </div>
+      <div class="modal-body" style="padding: 16px;">
+        <input type="hidden" id="attEditRowIndex" value="-1">
+
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: var(--gray-50); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 14px;">
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary);">Day type</span>
+          <span id="attEditDayBadge" class="day-badge badge-workday">Workday</span>
+        </div>
+
+        
+        <div style="padding: 12px 14px; background: var(--bg-surface); border: 1.5px solid var(--border-color); border-radius: 10px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div>
+            <strong style="font-size: 0.92rem; display: block; color: var(--text-primary);">Worked today</strong>
+            <span style="font-size: 0.72rem; color: var(--text-muted);" id="attEditWorkStatusHint">Timesheet</span>
+          </div>
+          <input type="checkbox" id="attEditWorkDayCheck" style="width: 22px; height: 22px; accent-color: var(--black); cursor: pointer;" onchange="onAttEditModalWorkDayToggle(this.checked)">
+        </div>
+
+        
+        <div id="attEditLeaveGroup" style="display: none; padding: 12px 14px; background: var(--gray-50); border: 1.5px solid var(--border-color); border-radius: 10px; margin-bottom: 14px;">
+          <label for="attEditLeaveTypeSelect" style="display: block; font-size: 0.78rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">Leave type (if absent)</label>
+          <select id="attEditLeaveTypeSelect" class="form-control form-select" style="height: 38px; font-weight: 600;" onchange="onAttEditModalLeaveChange(this.value)">
+            <option value="">No leave (absent)</option>
+            <option value="ANNUAL">Annual leave (keeps diligence)</option>
+            <option value="SICK">Sick leave (deducts diligence)</option>
+            <option value="PERSONAL">Personal leave (deducts diligence)</option>
+            <option value="OTHER">Other leave (deducts diligence)</option>
+          </select>
+          <div id="attEditLeaveDiligenceHint" style="font-size: 0.72rem; margin-top: 6px; font-weight: 600; color: var(--text-muted);">
+            * Any leave other than annual leave, or an absence on a workday, deducts the diligence allowance.
+          </div>
+        </div>
+
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+          <div>
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px;">Clock-in</label>
+            <select id="attEditInTimeSelect" class="form-control form-select text-center font-monospace" style="height: 38px; font-weight: 700;" onchange="onAttEditModalTimeChange(this.value)">
+              <!-- Options populated dynamically -->
+            </select>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px;">Clock-out</label>
+            <select id="attEditOutTimeSelect" class="form-control form-select text-center font-monospace" style="height: 38px; font-weight: 700;" onchange="onAttEditModalTimeChange(this.value)">
+              <!-- Options populated dynamically -->
+            </select>
+          </div>
+        </div>
+
+        
+        <div style="padding: 12px 14px; background: var(--gray-50); border: 1px solid var(--border-subtle); border-radius: 8px;">
+          <div style="font-size: 0.76rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; display: flex; justify-content: space-between;">
+            <span>Overtime today</span>
+            <span id="attEditTotalOTSum" class="font-monospace text-primary font-weight-bold">0.0 h</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--text-secondary); margin-bottom: 4px;">
+            <span>• OT 1.5× (workday after 17:00)</span>
+            <span class="font-monospace font-weight-bold" id="attEditPreviewOT15">0.0 h</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--text-secondary); margin-bottom: 4px;">
+            <span>• Holiday 1× (08:30–17:00)</span>
+            <span class="font-monospace font-weight-bold" id="attEditPreviewHol">0.0 h</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--text-secondary);">
+            <span>• Holiday OT 3× (after 17:00)</span>
+            <span class="font-monospace font-weight-bold" id="attEditPreviewOTHol">0.0 h</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 16px;">
+        <button type="button" class="btn btn-secondary" onclick="closeAttendanceEditModal()" style="width: 100%;">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveAttendanceEditModal()" style="width: 100%; font-weight: 700;">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT COMPANY -->
+  <div class="modal-backdrop" id="editCompanyModal" style="display:none; z-index: 1060;">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>Edit company</h3>
+        <button type="button" class="modal-close" onclick="closeEditCompanyModal()"><svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editCompanyTargetId">
+        <div class="form-group">
+          <label for="editCompanyName">Company name <span class="text-danger">*</span></label>
+          <input type="text" id="editCompanyName" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label for="editCompanyCode">Short code</label>
+          <input type="text" id="editCompanyCode" class="form-control" maxlength="12">
+        </div>
+        <div class="form-group">
+          <label for="editCompanyDesc">Description / note</label>
+          <input type="text" id="editCompanyDesc" class="form-control">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeEditCompanyModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveEditCompany()">Save changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AI CALENDAR IMAGE SCANNER & ANALYZER -->
+  <div class="modal-backdrop" id="calendarScanModal" style="display:none; z-index: 1060;">
+    <div class="modal-dialog modal-dialog-xl">
+      <div class="modal-header">
+        <div class="scan-modal-header-info">
+          <div class="scan-header-badge">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span>AI Calendar Scanner</span>
+          </div>
+          <h3 style="margin: 4px 0 0 0;">Scan a company calendar</h3>
+          <p class="modal-subtitle">Upload a photo of your calendar card — workdays, working Saturdays and holidays are detected and applied automatically.</p>
+        </div>
+        <button type="button" class="modal-close" onclick="closeCalendarScanModal()"><svg class="ic-x" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg></button>
+      </div>
+
+      <div class="modal-body scan-modal-body">
+        <!-- Top Grid: Left is Upload Zone & Config, Right is Image Preview -->
+        <div class="scan-top-grid">
+          <!-- Left: Upload & Target Configuration -->
+          <div class="scan-controls-col">
+            <!-- Step 1: Upload Image -->
+            <div class="scan-step-box">
+              <div class="scan-step-title">
+                <span class="step-num">1</span>
+                <span>Upload calendar photo</span>
+              </div>
+              
+              <div class="scan-dropzone" id="scanDropzone" onclick="document.getElementById('scanFileInput').click()">
+                <input type="file" id="scanFileInput" accept="image/*" multiple style="display:none;" onchange="handleScanFilesSelected(this.files)">
+                <div class="dropzone-icon">
+                  <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                </div>
+                <div class="dropzone-text"><strong>Click to choose images</strong> or drag them here</div>
+                <div class="dropzone-sub">JPG, PNG or WEBP, up to 2 images (e.g. front and back)</div>
+              </div>
+
+              <div class="scan-sample-trigger-row">
+                <span class="text-muted small">Or try a sample:</span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadSampleOrbrayImages()">
+                  Load Orbray 2026 sample
+                </button>
+              </div>
+            </div>
+
+            <!-- Step 2: Target & Engine Settings -->
+            <div class="scan-step-box mt-3">
+              <div class="scan-step-title">
+                <span class="step-num">2</span>
+                <span>Target company & engine</span>
+              </div>
+
+              <div class="form-group mb-2">
+                <label class="scan-label">Save the calendar to</label>
+                <div class="scan-radio-group">
+                  <label class="scan-radio-opt">
+                    <input type="radio" name="scanTargetComp" id="scanRadioCurrent" value="CURRENT" checked onchange="toggleScanCompanyTarget(this.value)">
+                    <span>Current company (<strong id="scanCurrentCompName">ORBRAY</strong>)</span>
+                  </label>
+                  <label class="scan-radio-opt">
+                    <input type="radio" name="scanTargetComp" id="scanRadioNew" value="NEW" onchange="toggleScanCompanyTarget(this.value)">
+                    <span>New company</span>
+                  </label>
+                </div>
+              </div>
+
+              <div id="scanNewCompFields" style="display:none;" class="scan-new-comp-box mb-2">
+                <div class="form-group">
+                  <label for="scanInpNewCompName">New company name <span class="text-danger">*</span></label>
+                  <input type="text" id="scanInpNewCompName" class="form-control" placeholder="e.g. Example Co., Ltd.">
+                </div>
+                <div class="form-group">
+                  <label for="scanInpNewCompCode">Short code</label>
+                  <input type="text" id="scanInpNewCompCode" class="form-control" placeholder="e.g. EX">
+                </div>
+              </div>
+
+              <div class="form-row-2col mb-2">
+                <div class="form-group">
+                  <label for="scanTargetYearBE">Calendar year</label>
+                  <input type="number" id="scanTargetYearBE" class="form-control" value="2026" min="1900" max="3000" oninput="onScanYearChange(this.value)">
+                </div>
+                <div class="form-group">
+                  <label>Thai year (B.E.)</label>
+                  <input type="text" id="scanTargetYearCE" class="form-control" value="2569" readonly disabled>
+                </div>
+              </div>
+
+              <!-- Gemini API Key Accordion / Field -->
+              <div class="scan-api-key-box mb-3">
+                <div class="scan-api-header" onclick="toggleScanApiKeyAccordion()">
+                  <div class="api-header-left">
+                    <span class="api-sparkle"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/></svg></span>
+                    <strong>Analyze with Google Gemini Vision (most accurate)</strong>
+                  </div>
+                  <span class="api-toggle-icon" id="scanApiKeyToggleIcon">▾</span>
+                </div>
+                <div class="scan-api-body" id="scanApiKeyBody">
+                  <div class="form-group mb-1">
+                    <label for="scanGeminiApiKey">Gemini API key (stored only on this device)</label>
+                    <input type="password" id="scanGeminiApiKey" class="form-control font-mono" placeholder="AIzaSy..." oninput="onScanApiKeyInput(this.value)">
+                  </div>
+                  <div class="api-hint-row">
+                    <small class="text-muted">Free Gemini Flash tier — get a key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a></small>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons for Analysis -->
+              <div class="scan-action-buttons">
+                <button type="button" class="btn btn-primary btn-scan-action" id="btnRunAIScan" onclick="startCalendarAnalysis('AI')">
+                  <span class="btn-spin" id="scanAISpin" style="display:none;"></span>
+                  <span>Analyze with AI Vision</span>
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-scan-action" id="btnRunPresetScan" onclick="startCalendarAnalysis('PRESET')">
+                  <span>Use Smart Preset (no key needed)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Image Previews & Detected Legend -->
+          <div class="scan-preview-col">
+            <div class="scan-step-title d-flex justify-content-between align-items-center">
+              <span>Uploaded images (<span id="scanImageCount">0</span> )</span>
+              <button type="button" class="btn btn-link btn-sm text-danger p-0" id="btnClearScanImages" style="display:none;" onclick="clearScanImages()">Clear images</button>
+            </div>
+            <div class="scan-images-gallery" id="scanImagesGallery">
+              <div class="scan-empty-gallery-hint">
+                <div class="hint-icon"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg></div>
+                <div>No images selected</div>
+                <small class="text-muted">Choose a calendar image, or load the Orbray sample.</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom: Results Verification & 12-Month Interactive Mini Preview (Appears after analysis) -->
+        <div class="scan-results-section" id="scanResultsSection" style="display:none;">
+          <div class="scan-results-header">
+            <div class="results-header-left">
+              <span class="results-badge-success">Analysis complete</span>
+              <h4 style="margin: 4px 0 0 0;">Detected workdays & holidays</h4>
+              <div class="text-muted small">Company: <strong id="scanResCompName">ORBRAY</strong> · Year: <strong id="scanResYear">2569 / 2026</strong></div>
+            </div>
+            <div class="results-kpi-pills">
+              <div class="res-kpi-pill kpi-nat">
+                <span class="kpi-dot dot-yellow"></span>
+                <span>Public: <strong id="resCountNat">20</strong> days</span>
+              </div>
+              <div class="res-kpi-pill kpi-mem">
+                <span class="kpi-dot dot-purple"></span>
+                <span>Company: <strong id="resCountMem">1</strong> days</span>
+              </div>
+              <div class="res-kpi-pill kpi-spec">
+                <span class="kpi-dot dot-red"></span>
+                <span>Special: <strong id="resCountSpec">1</strong> days</span>
+              </div>
+              <div class="res-kpi-pill kpi-sat">
+                <span class="kpi-dot dot-green"></span>
+                <span>Work Sat: <strong id="resCountWorkSat">16</strong> days</span>
+              </div>
+              <div class="res-kpi-pill kpi-sat-off">
+                <span class="kpi-dot dot-gray"></span>
+                <span>Sat off: <strong id="resCountSatOff">36</strong> days</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 12-Month Interactive Mini Grid -->
+          <div class="scan-preview-instruction">
+            <em>Click any day below to change its status before saving.</em>
+          </div>
+          <div class="scan-mini-calendar-grid" id="scanMiniCalendarGrid"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer scan-modal-footer">
+        <div class="footer-left">
+          <span class="text-muted small" id="scanStatusMsg">Ready to analyze</span>
+        </div>
+        <div class="footer-right">
+          <button type="button" class="btn btn-secondary" onclick="closeCalendarScanModal()">Close</button>
+          <button type="button" class="btn btn-success" id="btnApplyScanResult" disabled onclick="applyAnalyzedCalendarToCompany()">
+            Save to company calendar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Confirmation Modal -->
+  <div class="modal-backdrop" id="successConfirmModal" style="display:none; z-index: 99999;" onclick="handleSuccessBackdropClick(event)">
+    <div class="modal-dialog success-popup-dialog">
+      <div class="modal-body" style="padding: 28px 24px 24px 24px;">
+        <div class="success-popup-icon-wrap">
+          <div class="success-popup-check"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+        </div>
+        <h3 id="successPopupTitle" class="success-popup-title">Saved</h3>
+        <p id="successPopupMessage" class="success-popup-message">Your changes have been saved.</p>
+        <div style="margin-top: 22px;">
+          <button type="button" class="btn btn-primary btn-lg" id="successPopupOkBtn" onclick="closeSuccessPopup()">
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Phone Simulator Modal (Overlay) -->
+  <div class="simulator-backdrop" id="phoneSimulatorModal" style="display: none;" onclick="handleSimulatorBackdropClick(event)">
+    <!-- Floating Top Control Bar -->
+    <div class="sim-floating-toolbar" onclick="event.stopPropagation()">
+      <div class="sim-toolbar-left">
+        <div class="sim-brand-badge">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="3" ry="3"/>
+            <line x1="12" y1="18" x2="12.01" y2="18"/>
+          </svg>
+          <span>IPHONE SIMULATOR</span>
+        </div>
+
+        <div class="sim-control-group">
+          <label for="simDeviceSelect" class="sim-control-label">Device:</label>
+          <select id="simDeviceSelect" class="sim-select" onchange="changeSimulatorDevice(this.value)">
+            <optgroup label="Dynamic Island Series">
+              <option value="iphone16promax">iPhone 16 Pro Max (440 × 956)</option>
+              <option value="iphone15pro" selected>iPhone 15 Pro / 16 (393 × 852)</option>
+              <option value="iphone15promax">iPhone 15 Pro Max / 14 Pro Max (430 × 932)</option>
+            </optgroup>
+            <optgroup label="Slim Notch Series">
+              <option value="iphone14">iPhone 14 / 13 / 12 (390 × 844)</option>
+              <option value="iphone14plus">iPhone 14 Plus / 13 Pro Max (428 × 926)</option>
+              <option value="iphone13mini">iPhone 13 mini / 12 mini (375 × 812)</option>
+            </optgroup>
+            <optgroup label="Classic Notch Series">
+              <option value="iphone11">iPhone 11 / XR (414 × 896)</option>
+              <option value="iphone11pro">iPhone 11 Pro / X (375 × 812)</option>
+            </optgroup>
+          </select>
+        </div>
+      </div>
+
+      <div class="sim-toolbar-right">
+        <div class="sim-control-group">
+          <label for="simScaleSelect" class="sim-control-label">Zoom:</label>
+          <select id="simScaleSelect" class="sim-select" onchange="changeSimulatorScale(this.value)">
+            <option value="fit" selected>Auto fit</option>
+            <option value="1.0">100%</option>
+            <option value="0.85">85%</option>
+            <option value="0.75">75%</option>
+            <option value="0.65">65%</option>
+            <option value="0.5">50%</option>
+          </select>
+        </div>
+
+        <button type="button" class="sim-toolbar-btn" id="btnSimOrientation" onclick="toggleSimulatorOrientation()" title="Rotate">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+          </svg>
+          <span id="simOrientationText">Portrait</span>
+        </button>
+
+        <button type="button" class="sim-toolbar-btn" onclick="reloadSimulatorFrame()" title="Reload">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+        </button>
+
+        <button type="button" class="sim-toolbar-btn sim-btn-close" onclick="closePhoneSimulator()" title="Close (Esc)">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Stage Container (Center phone) -->
+    <div class="sim-stage-container" onclick="handleSimulatorBackdropClick(event)">
+      <div class="sim-device-scaler" id="simDeviceScaler">
+        <!-- Hardware Phone Chassis -->
+        <div class="sim-phone-frame" id="simPhoneFrame">
+          <!-- Hardware buttons -->
+          <div class="sim-hw-button sim-btn-silent"></div>
+          <div class="sim-hw-button sim-btn-vol-up"></div>
+          <div class="sim-hw-button sim-btn-vol-down"></div>
+          <div class="sim-hw-button sim-btn-power"></div>
+
+          <!-- Phone Screen Bezel -->
+          <div class="sim-screen-bezel" id="simScreenBezel">
+            <!-- Virtual iOS Status Bar -->
+            <div class="sim-status-bar" id="simStatusBar">
+              <div class="sim-status-time" id="simStatusTime">09:41</div>
+              
+              <!-- Cutout: Dynamic Island or Notch -->
+              <div class="sim-cutout-container" id="simCutoutContainer">
+                <div class="sim-dynamic-island" id="simDynamicIsland">
+                  <div class="sim-lens-dot"></div>
+                  <div class="sim-sensor-dot"></div>
+                </div>
+                <div class="sim-notch" id="simNotch" style="display: none;">
+                  <div class="sim-notch-speaker"></div>
+                  <div class="sim-notch-camera"></div>
+                </div>
+              </div>
+
+              <div class="sim-status-icons">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                  <rect x="2" y="16" width="3" height="6" rx="1"/>
+                  <rect x="7" y="12" width="3" height="10" rx="1"/>
+                  <rect x="12" y="8" width="3" height="14" rx="1"/>
+                  <rect x="17" y="4" width="3" height="18" rx="1"/>
+                </svg>
+                <span class="sim-5g-text">5G</span>
+                <div class="sim-battery-icon">
+                  <div class="sim-battery-body">
+                    <div class="sim-battery-level"></div>
+                  </div>
+                  <div class="sim-battery-tip"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Embedded Web View iframe -->
+            <iframe id="simIframe" class="sim-iframe" src="about:blank" title="Mobile App Simulator"></iframe>
+
+            <!-- Virtual iOS Home Indicator Bar -->
+            <div class="sim-home-bar-area">
+              <div class="sim-home-indicator"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Mobile bottom navigation -->
+  <nav class="mobile-tab-bar no-print" id="mobileTabBar">
+    <button type="button" class="mobile-tab-item active" id="mobileTabMain" onclick="switchView('main')">
+      <span class="mobile-tab-icon"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg></span>
+      <span class="mobile-tab-label">Payroll</span>
+    </button>
+    <button type="button" class="mobile-tab-item" id="mobileTabAttendance" onclick="switchView('attendance')">
+      <span class="mobile-tab-icon"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+      <span class="mobile-tab-label">Attendance</span>
+    </button>
+    <button type="button" class="mobile-tab-item" id="mobileTabCalendar" onclick="toggleCalendarView()">
+      <span class="mobile-tab-icon"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg></span>
+      <span class="mobile-tab-label">Calendar</span>
+    </button>
+    <button type="button" class="mobile-tab-item" id="mobileTabSettings" onclick="openSettingsSalaryModal()">
+      <span class="mobile-tab-icon"><svg class="ic" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg></span>
+      <span class="mobile-tab-label">Settings</span>
+    </button>
+  </nav>
+
+  <script src="app.js?v=10"></script>
+  <script src="title-case.js?v=8"></script>
+  <script src="select-menu.js?v=8"></script>
+  <script src="profile-extras.js?v=8"></script>
+</body>
+</html>
