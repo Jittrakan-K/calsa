@@ -1,3 +1,5 @@
+const ICON_EYE = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const ICON_EYE_OFF = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.4 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6A17.4 17.4 0 0 0 2 12s3.6 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
 /**
  * APP.JS - ระบบคำนวณเงินเดือน & ปฏิทินวันทำงาน
  * CALSA
@@ -1747,7 +1749,7 @@ function updateCardPeriodBadge() {
   if (subtitleEl) {
     const daysCount = (currentAttendance && currentAttendance.length) ? currentAttendance.length : 31;
     const _fmtD = (iso, withYear) => { const d = new Date(iso + 'T00:00:00'); if (isNaN(d)) return iso; const m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]; return `${d.getDate()} ${m}` + (withYear ? ` ${d.getFullYear()}` : ''); };
-    subtitleEl.innerText = `${_fmtD(currentPeriod.startDate)} – ${_fmtD(currentPeriod.endDate, true)} · ${daysCount} days · ${hasOverride ? 'Custom rates' : 'Standard rates'}`;
+    subtitleEl.innerText = `${_fmtD(currentPeriod.startDate)} – ${_fmtD(currentPeriod.endDate, true)}, ${daysCount} days, ${hasOverride ? 'Custom rates' : 'Standard rates'}`;
   }
 }
 
@@ -2906,7 +2908,7 @@ function renderScanImagesGallery() {
   if (scanUploadedImages.length === 0) {
     gallery.innerHTML = `
       <div class="scan-empty-gallery-hint">
-        <div class="hint-icon">🖼️</div>
+        <div class="hint-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg></div>
         <div>No images selected</div>
         <small class="text-muted">Choose a calendar image, or load the Orbray sample.</small>
       </div>
@@ -3795,10 +3797,10 @@ function togglePinVisibility() {
   if (!input) return;
   if (input.type === 'password') {
     input.type = 'text';
-    if (icon) icon.innerText = '🙈';
+    if (icon) icon.innerHTML = ICON_EYE_OFF;
   } else {
     input.type = 'password';
-    if (icon) icon.innerText = '👁️';
+    if (icon) icon.innerHTML = ICON_EYE;
   }
 }
 
@@ -3920,7 +3922,7 @@ function updateAdminScopeBanner() {
     const activeUser = getActiveEditingUser();
     const bannerHtml = `
       <div class="banner-content">
-        <span class="banner-icon">⚠️</span>
+        <span class="banner-icon" aria-hidden="true"></span>
         <span>Viewing as admin: <strong>${escapeHtml(activeUser.name)}</strong></span>
         <button type="button" class="btn btn-xs btn-outline-primary" onclick="switchEditingUser('user_admin')">
           Back to my data
@@ -4266,7 +4268,7 @@ function openAccountModal() {
     elPin.type = 'password';
   }
   const pinIcon = document.getElementById('accPinIcon');
-  if (pinIcon) pinIcon.textContent = '👁️';
+  if (pinIcon) pinIcon.innerHTML = ICON_EYE;
 
   modal.style.display = 'flex';
 }
@@ -4283,10 +4285,10 @@ function toggleAccPinVisibility() {
 
   if (input.type === 'password') {
     input.type = 'text';
-    icon.textContent = '🙈';
+    icon.innerHTML = ICON_EYE_OFF;
   } else {
     input.type = 'password';
-    icon.textContent = '👁️';
+    icon.innerHTML = ICON_EYE;
   }
 }
 
@@ -4662,7 +4664,7 @@ function openFirebaseConfigModal() {
     if (isCustom) {
       statusBanner.className = 'fb-server-status-banner banner-custom';
       statusBanner.innerHTML = `
-        <div class="fb-status-icon">🟢</div>
+        <div class="fb-status-icon" aria-hidden="true"></div>
         <div class="fb-status-content" style="flex:1;">
           <div class="fb-status-title">Server: <strong>${escapeHtml(cfg.projectId)}</strong> <span class="fb-status-tag-custom">Online</span></div>
           <div class="fb-status-desc">Connected to Firebase Firestore. Data syncs in real time.</div>
@@ -4682,7 +4684,7 @@ function openFirebaseConfigModal() {
     } else {
       statusBanner.className = 'fb-server-status-banner banner-demo';
       statusBanner.innerHTML = `
-        <div class="fb-status-icon">🟡</div>
+        <div class="fb-status-icon" aria-hidden="true"></div>
         <div class="fb-status-content">
           <div class="fb-status-title">Server: <strong>Local storage</strong> <span class="fb-status-tag-demo">Offline</span></div>
           <div class="fb-status-desc">Not connected to the cloud. Data is stored in this browser only. To sync between computer and phone, enter a Firebase config below or open a sync link from a connected device.</div>
@@ -4779,10 +4781,10 @@ function toggleFbApiKeyVisibility() {
   if (!input) return;
   if (input.type === 'password') {
     input.type = 'text';
-    if (icon) icon.textContent = '🙈';
+    if (icon) icon.innerHTML = ICON_EYE_OFF;
   } else {
     input.type = 'password';
-    if (icon) icon.textContent = '👁️';
+    if (icon) icon.innerHTML = ICON_EYE;
   }
 }
 
@@ -4910,14 +4912,14 @@ async function testFirebaseConfigFromModal() {
   if (res.success) {
     if (alertBox) {
       alertBox.className = 'alert alert-success';
-      alertBox.textContent = `🟢 ${res.message}`;
+      alertBox.textContent = res.message;
       alertBox.style.display = 'block';
     }
     showToastNotification(`Connected to "${projectId}"`);
   } else {
     if (alertBox) {
       alertBox.className = 'alert alert-danger';
-      alertBox.textContent = `❌ ${res.error}`;
+      alertBox.textContent = res.error;
       alertBox.style.display = 'block';
     }
     showToastNotification(`Connection failed`);
